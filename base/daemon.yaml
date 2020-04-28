@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: envchecker
+  namespace: instana-agent
+  labels:
+    app: envchecker
+spec:
+  selector:
+    matchLabels:
+      name: envchecker
+  template:
+    metadata:
+      labels:
+        name: envchecker
+    spec:
+      hostNetwork: true
+      containers:
+        - name: envchecker
+          image: 192.168.253.99:5001/envcheck/daemon:latest
+          imagePullPolicy: Always
+          env:
+            - name: NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NODEIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: PODIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 20Mi
+            limits:
+              cpu: 100m
+              memory: 512Mi

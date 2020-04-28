@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: pinger
+  labels:
+    name: pinger
+spec:
+  selector:
+    matchLabels:
+      name: pinger
+  template:
+    metadata:
+      labels:
+        name: pinger
+    spec:
+      containers:
+        - name: pinger
+          image: 192.168.253.99:5001/envcheck/pinger:latest
+          imagePullPolicy: Always
+          env:
+            - name: NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NODEIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: PODIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: PINGHOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: PINGPORT
+              value: "42699"
+          resources:
+            requests:
+              memory: "5Mi"
+              cpu: "10m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
