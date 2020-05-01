@@ -80,6 +80,7 @@ Future Capabilities
 -------------------
 
  * Add instana-agent config map to the JSON dump.
+ * Add agent memory sizing guide for a k8s cluster.
  * Check access to backend from all daemonsets.
  * Check API permissions.
  * Provide DaemonSet sizing recommendations.
