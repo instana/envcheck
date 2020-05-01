@@ -19,6 +19,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+var (
+	Revision string
+)
+
 func Exec(kubeconfig string) {
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -36,7 +40,7 @@ func Exec(kubeconfig string) {
 		Name: config.Host,
 	}
 
-	log.Printf("cluster=%v\n", cluster.Name)
+	log.Printf("envcheckctl=%s, cluster=%v\n", Revision, cluster.Name)
 	log.Println("Collecting pod details. This vary depending on the cluster.")
 	pods, err := AllPods(clientset)
 	if err != nil {

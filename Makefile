@@ -19,6 +19,18 @@ lint: lint.out
 .PHONY: coverage
 coverage: coverage.out
 
+.PHONY: envcheckctl
+envcheckctl: envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64
+
+envcheckctl.exe:
+	GOOS=windows GOARCH=amd64 go build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
+
+envcheckctl.darwin64:
+	GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
+
+envcheckctl.amd64:
+	GOOS=linux GOARCH=amd64 go build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
+
 # run the tests with atomic coverage
 cover.out: $(SRC)
 	go test -v -cover -covermode atomic -coverprofile cover.out ./...
