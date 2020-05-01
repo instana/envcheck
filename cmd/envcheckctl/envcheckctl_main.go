@@ -40,8 +40,9 @@ func Exec(kubeconfig string) {
 		Name: config.Host,
 	}
 
-	log.Printf("envcheckctl=%s, cluster=%v\n", Revision, cluster.Name)
-	log.Println("Collecting pod details. This vary depending on the cluster.")
+	start := time.Now()
+	log.Printf("envcheckctl=%s, cluster=%v, start=%v\n", Revision, cluster.Name, start.Format(time.RFC3339))
+	log.Println("Collecting pod details. Duration varies depending on the cluster.")
 	pods, err := AllPods(clientset)
 	if err != nil {
 		log.Fatalf("error retrieving pods: %v\n", err)
@@ -54,7 +55,7 @@ func Exec(kubeconfig string) {
 	cluster.Apply(index)
 	summary := index.Summary()
 
-	log.Printf("pods=%d, running=%d, nodes=%d, containers=%d, namespaces=%d, deployments=%d, daemonsets=%d, statefulsets=%d\n",
+	log.Printf("pods=%d, running=%d, nodes=%d, containers=%d, namespaces=%d, deployments=%d, daemonsets=%d, statefulsets=%d, duration=%v\n",
 		summary.Pods,
 		summary.Running,
 		summary.Nodes,
@@ -62,9 +63,10 @@ func Exec(kubeconfig string) {
 		summary.Namespaces,
 		summary.Deployments,
 		summary.DaemonSets,
-		summary.StatefulSets)
+		summary.StatefulSets,
+		time.Now().Sub(start))
 
-	w, err := os.Create("cluster-info.json")
+	w, err := os.Create(fmt.Sprintf("cluster-info-%d.json", time.Now().UTC().Unix()))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -151,7 +153,7 @@ func (index *ClusterIndex) Each(pod PodInfo) {
 		case "DaemonSet":
 			index.DaemonSets.Add(n)
 			break
-		case "ReplicaSet": // hackish way to calculate daemonsets
+		case "ReplicaSet": // hackish way to calculate deployments
 			index.Deployments.Add(n)
 			break
 		case "StatefulSet":

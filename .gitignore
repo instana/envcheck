@@ -1,3 +1,4 @@
 /*.out
 /envcheckctl
-/cluster-info.json
+/envcheckctl.*
+/cluster-info*.json
