@@ -15,10 +15,16 @@ Requirements
 Installation
 ------------
 
-Before installing, update the YAML file image keys with your docker repo. 
+Before installing, update the YAML file image keys with your docker repo.
+
+### Daemon and Pinger
+
+The daemon and pinger validate connectivity in your cluster between the agent and an instrumented application.
+
+The commands below will build and deploy the daemon and pinger to your cluster.
 
 ```shell
-export DOCKER_REPO=YOUR_DOCKER_REPO
+export DOCKER_REPO=YOUR_DOCKER_REPO_URL
 make # this will 
 kubectl create namespace instana-agent
 # deploy daemon pods that bind to host network similar to the agent.
@@ -52,14 +58,28 @@ kc logs -n instana-agent -l name=envchecker -f
 2020/04/29 19:46:06 daemon=7c09e63 listen=0.0.0.0:42699 pod=instana-agent/envchecker-9qggf podIP=192.168.253.102 nodeIP=192.168.253.102
 ```
 
+### envcheckctl
+
+The application envcheckctl is capable of collecting data to aid in debugging a cluster.
+
+```shell
+# use the default context for kubectl
+envcheckctl -kubeconfig $KUBECONFIG
+
+# use a specific kubeconfig file
+envcheckctl -kubeconfig $KUBECONFIG
+```
+
 Current Capabilities
 --------------------
 
  * Validate connectivity from namespace/pod to local host network.
+ * Pull a dump of all pods in the cluster using envcheckctl.
 
 Future Capabilities
 -------------------
 
+ * Add instana-agent config map to the JSON dump.
  * Check access to backend from all daemonsets.
  * Check API permissions.
  * Provide DaemonSet sizing recommendations.
