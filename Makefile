@@ -22,13 +22,13 @@ coverage: coverage.out
 .PHONY: envcheckctl
 envcheckctl: envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64
 
-envcheckctl.exe:
+envcheckctl.exe: $(SRC)
 	GOOS=windows GOARCH=amd64 go build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
 
-envcheckctl.darwin64:
+envcheckctl.darwin64: $(SRC)
 	GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
 
-envcheckctl.amd64:
+envcheckctl.amd64: $(SRC)
 	GOOS=linux GOARCH=amd64 go build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
 
 # run the tests with atomic coverage
@@ -54,7 +54,7 @@ lint.out: $(SRC)
 # clean the generated files
 .PHONY: clean
 clean:
-	rm *.out
+	rm -f *.out
 	go clean -i ./...
 
 # TODO: Optimise so it only executes on code changes.

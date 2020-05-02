@@ -65,24 +65,33 @@ kc logs -n instana-agent -l name=envchecker -f
 The application envcheckctl is capable of collecting data to aid in debugging a cluster.
 
 ```shell
-# use the default context for kubectl
-envcheckctl -kubeconfig $KUBECONFIG
-
 # use a specific kubeconfig file
-envcheckctl -kubeconfig $KUBECONFIG
+$ envcheckctl -kubeconfig $KUBECONFIG
+# ...
+
+# use the default context for kubectl
+$ envcheckctl
+# cluster connection
+2020/05/02 19:30:26 envcheckctl=6c7bc57, cluster=https://88fe4a1b-f913-432f-bb03-64c6fcda31dd.k8s.ondigitalocean.com, start=2020-05-02T19:30:26-03:00
+2020/05/02 19:30:26 Collecting pod details. Duration varies depending on the cluster.
+# cluster summary
+2020/05/02 19:30:27 pods=33, running=33, nodes=3, containers=36, namespaces=3, deployments=17, daemonsets=5, statefulsets=0, duration=969.437541ms
+# suggested agent sizing
+2020/05/02 19:30:27 sizing=instana-agent cpurequests=500m cpulimits=1.5 memoryrequests=512Mi memorylimits=512Mi
 ```
+
 
 Current Capabilities
 --------------------
 
  * Validate connectivity from namespace/pod to local host network.
  * Pull a dump of all pods in the cluster using envcheckctl.
+ * Add agent memory sizing guide for a K8S cluster.
 
 Future Capabilities
 -------------------
 
  * Add instana-agent config map to the JSON dump.
- * Add agent memory sizing guide for a k8s cluster.
  * Check access to backend from all daemonsets.
  * Check API permissions.
  * Aggregate and collect all metrics with a coordinator.
