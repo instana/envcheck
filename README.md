@@ -72,12 +72,12 @@ $ envcheckctl -kubeconfig $KUBECONFIG
 # use the default context for kubectl
 $ envcheckctl
 # cluster connection
-2020/05/02 19:30:26 envcheckctl=6c7bc57, cluster=https://88fe4a1b-f913-432f-bb03-64c6fcda31dd.k8s.ondigitalocean.com, start=2020-05-02T19:30:26-03:00
-2020/05/02 19:30:26 Collecting pod details. Duration varies depending on the cluster.
+2020/05/02 19:33:47 envcheckctl=997fe30, cluster=https://88fe4a1b-f913-432f-bb03-64c6fcda31dd.k8s.ondigitalocean.com, start=2020-05-02T19:33:47-03:00
+2020/05/02 19:33:47 Collecting pod details. Duration varies depending on the cluster.
 # cluster summary
-2020/05/02 19:30:27 pods=33, running=33, nodes=3, containers=36, namespaces=3, deployments=17, daemonsets=5, statefulsets=0, duration=969.437541ms
+2020/05/02 19:33:48 pods=33, running=33, nodes=3, containers=36, namespaces=3, deployments=17, daemonsets=5, statefulsets=0, duration=955.355516ms
 # suggested agent sizing
-2020/05/02 19:30:27 sizing=instana-agent cpurequests=500m cpulimits=1.5 memoryrequests=512Mi memorylimits=512Mi
+2020/05/02 19:33:48 sizing=instana-agent cpurequests=500m cpulimits=1.5 memoryrequests=512Mi memorylimits=512Mi heap=170M
 ```
 
 
