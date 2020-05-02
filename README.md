@@ -1,6 +1,8 @@
 envcheck
 ========
 
+[![Godoc](https://godoc.org/github.com/instana/envcheck?status.svg)](https://godoc.org/github.com/instana/envcheck) [![Go Report Card](https://goreportcard.com/report/github.com/instana/envcheck)](https://goreportcard.com/report/github.com/instana/envcheck)
+
 Used to inspect a Kubernetes/OpenShift cluster for common agent
  installation issues. The memory and CPU requirements are minimal overhead
  so that it can run with little concern in a cluster.
