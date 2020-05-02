@@ -20,9 +20,11 @@ import (
 )
 
 var (
+	// Revision is the Git commit SHA injected at compile time.
 	Revision string
 )
 
+// Exec is the primary execution for the envcheckctl application.
 func Exec(kubeconfig string) {
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -80,21 +82,26 @@ func Exec(kubeconfig string) {
 	}
 }
 
+// Set provides a set collection for strings.
 type Set map[string]bool
 
+// Add integrates the item into the underlying set.
 func (s Set) Add(item string) {
 	s[item] = true
 }
 
+// Len lists the number of items in the set.
 func (s Set) Len() int {
 	return len(s)
 }
 
+// Contains tests if the item is found in the set.
 func (s Set) Contains(item string) bool {
 	_, present := s[item]
 	return present
 }
 
+// New creates a new cluster index for relevant cluster entities.
 func New() *ClusterIndex {
 	return &ClusterIndex{
 		Containers:   make(Set),
@@ -108,6 +115,7 @@ func New() *ClusterIndex {
 	}
 }
 
+// ClusterIndex provides indexes for a number of the cluster entities.
 type ClusterIndex struct {
 	Containers   Set
 	DaemonSets   Set
@@ -119,19 +127,21 @@ type ClusterIndex struct {
 	StatefulSets Set
 }
 
+// Summary provides a summary count for all of the entities.
 func (index *ClusterIndex) Summary() ClusterSummary {
 	return ClusterSummary{
-		Containers:   len(index.Containers),
-		DaemonSets:   len(index.DaemonSets),
-		Deployments:  len(index.Deployments),
-		Nodes:        len(index.Nodes),
-		Namespaces:   len(index.Namespaces),
-		Pods:         len(index.Pods),
-		Running:      len(index.Running),
-		StatefulSets: len(index.StatefulSets),
+		Containers:   index.Containers.Len(),
+		DaemonSets:   index.DaemonSets.Len(),
+		Deployments:  index.Deployments.Len(),
+		Nodes:        index.Nodes.Len(),
+		Namespaces:   index.Namespaces.Len(),
+		Pods:         index.Pods.Len(),
+		Running:      index.Running.Len(),
+		StatefulSets: index.StatefulSets.Len(),
 	}
 }
 
+// Each extracts the relevant pod details and integrates it into the index.
 func (index *ClusterIndex) Each(pod PodInfo) {
 	qualifiedName := fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)
 	index.Pods.Add(qualifiedName)
@@ -162,6 +172,7 @@ func (index *ClusterIndex) Each(pod PodInfo) {
 	}
 }
 
+// ClusterSummary provides a summary overview of the number of entities in the cluster.
 type ClusterSummary struct {
 	Containers   int
 	DaemonSets   int
@@ -173,6 +184,7 @@ type ClusterSummary struct {
 	StatefulSets int
 }
 
+// AllPods retrieves all pod info from the cluster.
 func AllPods(clientset *kubernetes.Clientset) ([]PodInfo, error) {
 	var cont string
 	var podList []PodInfo
@@ -239,6 +251,7 @@ func homeDir() string {
 	return usr.HomeDir
 }
 
+// ClusterInfo is a data structure for relevant cluster data.
 type ClusterInfo struct {
 	Name     string
 	PodCount int
@@ -246,10 +259,12 @@ type ClusterInfo struct {
 	Version  string
 }
 
+// PodApplyable is the interface to receive pod info from a pod collection.
 type PodApplyable interface {
 	Each(PodInfo)
 }
 
+// Apply iterates over each pod and yields it to the list of applyables.
 func (info *ClusterInfo) Apply(applyable ...PodApplyable) {
 	for _, pod := range info.Pods {
 		for _, a := range applyable {
@@ -258,6 +273,7 @@ func (info *ClusterInfo) Apply(applyable ...PodApplyable) {
 	}
 }
 
+// PodInfo is summary details for a pod.
 type PodInfo struct {
 	Containers []ContainerInfo
 	Host       string
@@ -267,6 +283,7 @@ type PodInfo struct {
 	Owners     map[string]string
 }
 
+// ContainerInfo is summary details for a container.
 type ContainerInfo struct {
 	Name  string
 	Image string

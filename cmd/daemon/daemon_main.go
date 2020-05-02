@@ -10,9 +10,11 @@ import (
 )
 
 var (
+	// Revision is the Git commit SHA injected at compile time.
 	Revision = "dev"
 )
 
+// Exec is the primary execution for the daemon application.
 func Exec(address string, info DownwardInfo) error {
 	log.Printf("daemon=%s listen=%s pod=%s/%s podIP=%s nodeIP=%s", Revision, address, info.Namespace, info.Name, info.PodIP, info.NodeIP)
 	publish("address", address)
@@ -26,12 +28,12 @@ func Exec(address string, info DownwardInfo) error {
 		return err
 	}
 
-
 	http.HandleFunc("/ping", PingHandler(info))
 
 	return http.ListenAndServe(address, nil)
 }
 
+// MapInterfaces provides a map of interfaces to IP addresses.
 func MapInterfaces() (map[string][]string, error) {
 	m := make(map[string][]string)
 	interfaces, err := net.Interfaces()
@@ -55,6 +57,7 @@ func MapInterfaces() (map[string][]string, error) {
 	return m, nil
 }
 
+// PingHandler handles pings from the pinger client.
 func PingHandler(info DownwardInfo) func(w http.ResponseWriter, r *http.Request) {
 	b := []byte(info.NodeIP)
 
@@ -87,6 +90,7 @@ func publish(key string, value string) {
 	expvar.NewString(key).Set(value)
 }
 
+// DownwardInfo is the data injected into the pod from the downward API.
 type DownwardInfo struct {
 	Name      string
 	Namespace string

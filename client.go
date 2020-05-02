@@ -7,16 +7,19 @@ import (
 	"net/http"
 )
 
+// New creates a pinger client.
 func New(client *http.Client) *Client {
 	return &Client{
 		client: client,
 	}
 }
 
+// Client encapsulates a HTTP pinger client.
 type Client struct {
 	client *http.Client
 }
 
+// Ping requests the ping daemon pods ping end-point.
 func (c *Client) Ping(address string, info DownwardInfo) error {
 	resp, err := c.client.Get(fmt.Sprintf("http://%s/ping", address))
 	if err != nil {
@@ -37,6 +40,7 @@ func (c *Client) Ping(address string, info DownwardInfo) error {
 	return nil
 }
 
+// DownwardInfo is the data injected into the pod from the downward API.
 type DownwardInfo struct {
 	Name      string
 	Namespace string

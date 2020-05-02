@@ -14,9 +14,11 @@ import (
 )
 
 var (
+	// Revision is the Git commit SHA injected at compile time.
 	Revision = "dev"
 )
 
+// Exec is the primary execution for the pinger application.
 func Exec(address string, info envcheck.DownwardInfo, c *http.Client) error {
 	log.Printf("pinger=%s ping=%s pod=%s/%s podIP=%s nodeIP=%s", Revision, address, info.Namespace, info.Name, info.PodIP, info.NodeIP)
 	publish("address", address)
