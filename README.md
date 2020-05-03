@@ -7,6 +7,21 @@ Used to inspect a Kubernetes/OpenShift cluster for common agent
  installation issues. The memory and CPU requirements are minimal overhead
  so that it can run with little concern in a cluster.
 
+Current Capabilities
+--------------------
+
+ * daemon/pinger - Validate connectivity from namespace/pod to local host network.
+ * envcheckctl - Pull a dump of all pods in the cluster .
+ * envcheckctl - Add agent memory sizing guide for a K8S cluster.
+
+Future Capabilities
+-------------------
+
+ * Add instana-agent config map to the JSON dump.
+ * Check access to backend from all daemonsets.
+ * Check API permissions.
+ * Aggregate and collect all metrics with a coordinator.
+
 Requirements
 ------------
 
@@ -79,22 +94,6 @@ $ envcheckctl
 # suggested agent sizing
 2020/05/02 19:33:48 sizing=instana-agent cpurequests=500m cpulimits=1.5 memoryrequests=512Mi memorylimits=512Mi heap=170M
 ```
-
-
-Current Capabilities
---------------------
-
- * Validate connectivity from namespace/pod to local host network.
- * Pull a dump of all pods in the cluster using envcheckctl.
- * Add agent memory sizing guide for a K8S cluster.
-
-Future Capabilities
--------------------
-
- * Add instana-agent config map to the JSON dump.
- * Check access to backend from all daemonsets.
- * Check API permissions.
- * Aggregate and collect all metrics with a coordinator.
 
 Debug Container
 ---------------
