@@ -39,7 +39,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: PINGPORT
-              value: "42699"
+              value: "42700"
           resources:
             requests:
               memory: "5Mi"
