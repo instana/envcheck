@@ -1,11 +1,14 @@
-SHELL := /bin/sh
+SHELL := /bin/bash -eu
 CMDS := $(wildcard cmd/*)
 IMGS := $(subst cmd,envcheck,${CMDS})
 SRC := $(wildcard cmd/**/*.go) $(wildcard *.go)
 GIT_SHA := $(shell git rev-parse --short HEAD)
 
 .PHONY: all
-all: vet lint coverage ${IMGS}
+all: vet lint coverage envcheckctl
+
+.PHONY: publish
+publish: $(IMGS) all
 
 .PHONY: test
 test: cover.out
@@ -61,5 +64,6 @@ clean:
 # build a docker container per command
 .PHONY: envcheck/%
 envcheck/%:
-	docker build . -t $@:latest -t $@:${GIT_SHA} --build-arg CMD_PATH=./cmd/$(subst envcheck/,,$@) --build-arg GIT_SHA=${GIT_SHA}
-	# docker push ${DOCKER_REPO}/$@:latest
+	docker build . -t ${DOCKER_REPO}/$@:latest -t ${DOCKER_REPO}/$@:${GIT_SHA} --build-arg CMD_PATH=./cmd/$(subst envcheck/,,$@) --build-arg GIT_SHA=${GIT_SHA}
+	docker push ${DOCKER_REPO}/$@:${GIT_SHA}
+	docker push ${DOCKER_REPO}/$@:latest
