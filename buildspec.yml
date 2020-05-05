@@ -1,0 +1,15 @@
+version: 0.2
+
+env:
+  parameter-store:
+    GITHUB_READ_USER: "github.read.user"
+    GITHUB_READ_PASSWORD: "github.read.password"
+
+phases:
+  install:
+    runtime-versions:
+      golang: 1.14
+      docker: 19
+  build:
+    commands:
+      - make

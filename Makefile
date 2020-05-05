@@ -61,5 +61,5 @@ clean:
 # build a docker container per command
 .PHONY: envcheck/%
 envcheck/%:
-	docker build . -t ${DOCKER_REPO}/$@:latest --build-arg CMD_PATH=./cmd/$(subst envcheck/,,$@) --build-arg GIT_SHA=${GIT_SHA}
-	docker push ${DOCKER_REPO}/$@:latest
+	docker build . -t $@:latest -t $@:${GIT_SHA} --build-arg CMD_PATH=./cmd/$(subst envcheck/,,$@) --build-arg GIT_SHA=${GIT_SHA}
+	# docker push ${DOCKER_REPO}/$@:latest
