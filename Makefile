@@ -1,6 +1,6 @@
 SHELL := /bin/bash -eu
 CMDS := $(wildcard cmd/*)
-IMGS := $(subst cmd,envcheck,${CMDS})
+IMGS := ${DOCKER_REPO}/envcheck-pinger ${DOCKER_REPO}/envcheck-daemon
 SRC := $(wildcard cmd/**/*.go) $(wildcard *.go)
 GIT_SHA := $(shell git rev-parse --short HEAD)
 
@@ -8,7 +8,7 @@ GIT_SHA := $(shell git rev-parse --short HEAD)
 all: vet lint coverage envcheckctl
 
 .PHONY: publish
-publish: $(IMGS) all
+publish: all $(IMGS)
 
 .PHONY: test
 test: cover.out
@@ -60,10 +60,9 @@ clean:
 	rm -f *.out
 	go clean -i ./...
 
-# TODO: Optimise so it only executes on code changes.
-# build a docker container per command
-.PHONY: envcheck/%
-envcheck/%:
-	docker build . -t ${DOCKER_REPO}/$@:latest -t ${DOCKER_REPO}/$@:${GIT_SHA} --build-arg CMD_PATH=./cmd/$(subst envcheck/,,$@) --build-arg GIT_SHA=${GIT_SHA}
-	docker push ${DOCKER_REPO}/$@:${GIT_SHA}
-	docker push ${DOCKER_REPO}/$@:latest
+# build a docker container per service
+.PHONY: ${DOCKER_REPO}/
+${DOCKER_REPO}/%:
+	docker build . -t $@:latest -t $@:${GIT_SHA} --build-arg CMD_PATH=./cmd/$(subst ${DOCKER_REPO}/envcheck-,,$@) --build-arg GIT_SHA=${GIT_SHA}
+	docker push $@:${GIT_SHA}
+	docker push $@:latest

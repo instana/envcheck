@@ -17,7 +17,7 @@ spec:
       hostNetwork: true
       containers:
         - name: envchecker
-          image: 192.168.253.99:5001/envcheck/daemon:latest
+          image: instana/envcheck-daemon:latest
           imagePullPolicy: Always
           env:
             - name: NAME

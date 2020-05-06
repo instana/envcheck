@@ -1,10 +1,16 @@
 version: 0.2
+env:
+  parameter-store:
+    DOCKER_USER: "hub.docker.com.user"
+    DOCKER_PASSWORD: "hub.docker.com.password"
 
 phases:
   install:
     runtime-versions:
       golang: 1.14
       docker: 19
+    commands:
+      - docker login --username $DOCKER_USER --password $DOCKER_PASSWORD
   build:
     commands:
-      - make
+      - make publish

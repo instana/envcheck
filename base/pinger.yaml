@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: pinger
-          image: 192.168.253.99:5001/envcheck/pinger:latest
+          image: instana/envcheck-pinger:latest
           imagePullPolicy: Always
           env:
             - name: NAME
