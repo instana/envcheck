@@ -1,5 +1,5 @@
-envcheck
-========
+envcheck ![Status: Beta](https://img.shields.io/badge/Status-BETA-YELLOW.svg)
+=============================================================================
 
 [![Godoc](https://godoc.org/github.com/instana/envcheck?status.svg)](https://godoc.org/github.com/instana/envcheck) [![Go Report Card](https://goreportcard.com/badge/github.com/instana/envcheck)](https://goreportcard.com/report/github.com/instana/envcheck) [![CodeBuild Badge](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoialJ0L0lFUlFraEJKNU1tYVcwcDZWN3d4M2lJMjZTM003TG9OYXZOVndlSXNxQnlQeGt4NjVQUmpRa3pqcUdnajcrLzd3MWtxYnkyckpDWmFHT2ZMMVBnPSIsIml2UGFyYW1ldGVyU3BlYyI6IksyckVKVXc0V2NoYkRxQ0giLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://us-west-2.console.aws.amazon.com/codesuite/codebuild/projects/envcheck/history)
 
