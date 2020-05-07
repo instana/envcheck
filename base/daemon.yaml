@@ -4,7 +4,7 @@ metadata:
   name: envchecker
   namespace: instana-agent
   labels:
-    app: envchecker
+    name: envchecker
 spec:
   selector:
     matchLabels:
