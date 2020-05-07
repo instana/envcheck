@@ -39,6 +39,7 @@ Install Requirements
 
 - Cluster Admin access to Kubernetes/OpenShift cluster.
 - kubectl or OpenShift client.
+- latest [https://github.com/instana/envcheck/releases/latest](envcheckctl) binary for your OS.
 
 ### Running envcheckctl
 
