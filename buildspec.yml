@@ -13,4 +13,4 @@ phases:
       - docker login --username $DOCKER_USER --password $DOCKER_PASSWORD
   build:
     commands:
-      - make publish
+      - make -j4 publish
