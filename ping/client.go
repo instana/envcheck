@@ -1,4 +1,4 @@
-package envcheck
+package ping
 
 import (
 	"bytes"

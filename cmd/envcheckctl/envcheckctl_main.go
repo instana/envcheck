@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/instana/envcheck/agent"
 	"github.com/instana/envcheck/cluster"
 )
 
@@ -39,6 +40,7 @@ func QueryLive(query cluster.Query) (*cluster.Info, error) {
 	return info, nil
 }
 
+// LoadInfo loads cluster details from the specified reader.
 func LoadInfo(r io.Reader) (*cluster.Info, error) {
 	var info cluster.Info
 	dec := json.NewDecoder(r)
@@ -105,7 +107,7 @@ func Exec(kubeconfig string, isLive bool, podfile string) {
 		summary.StatefulSets,
 		info.Finished.Sub(info.Started))
 
-	size := cluster.AgentSize(summary)
+	size := agent.Size(summary)
 	log.Printf("sizing=instana-agent cpurequests=%s cpulimits=%s memoryrequests=%s memorylimits=%s heap=%s\n",
 		size.CPURequest,
 		size.CPULimit,

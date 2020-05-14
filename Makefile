@@ -48,7 +48,7 @@ coverage.out: cover.out
 
 # run vet against the codebase
 vet.out: $(SRC)
-	go vet -v ./... | tee vet.out
+	go vet github.com/instana/envcheck/... | tee vet.out
 
 # run the linter against the codebase
 lint.out: $(SRC)

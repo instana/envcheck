@@ -2,3 +2,4 @@
 /envcheckctl
 /envcheckctl.*
 /cluster-info*.json
+/coverage.html

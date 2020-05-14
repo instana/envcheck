@@ -1,4 +1,4 @@
-package envcheck_test
+package ping_test
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/instana/envcheck"
+	"github.com/instana/envcheck/ping"
 )
 
 func Test_success_on_match(t *testing.T) {
@@ -22,9 +22,9 @@ func Test_success_on_match(t *testing.T) {
 
 	response.Store(u.Hostname())
 
-	c := envcheck.New(client)
+	c := ping.New(client)
 
-	err := c.Ping(u.Host, envcheck.DownwardInfo{NodeIP: u.Hostname()})
+	err := c.Ping(u.Host, ping.DownwardInfo{NodeIP: u.Hostname()})
 	if err != nil {
 		t.Errorf("got <%v>, want nil", err)
 	}
@@ -37,9 +37,9 @@ func Test_should_fail_on_mismatch(t *testing.T) {
 	ts, client, u := testServer(&response)
 	defer ts.Close()
 
-	c := envcheck.New(client)
+	c := ping.New(client)
 
-	err := c.Ping(u.Host, envcheck.DownwardInfo{NodeIP: u.Hostname()})
+	err := c.Ping(u.Host, ping.DownwardInfo{NodeIP: u.Hostname()})
 	if !strings.HasPrefix(err.Error(), "mismatch for nodeip received 8.8.4.4, wanted ") {
 		t.Errorf("got <%v>, want mismatch error", err)
 	}
@@ -51,9 +51,9 @@ func Test_should_fail_on_unbound_port(t *testing.T) {
 	ts, client, u := testServer(&response)
 	defer ts.Close()
 
-	c := envcheck.New(client)
+	c := ping.New(client)
 
-	err := c.Ping("localhost:1035", envcheck.DownwardInfo{NodeIP: u.Hostname()})
+	err := c.Ping("localhost:1035", ping.DownwardInfo{NodeIP: u.Hostname()})
 	if !strings.HasSuffix(err.Error(), "connect: connection refused") {
 		t.Errorf("got %v, want nil", err)
 	}

@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/instana/envcheck"
+	"github.com/instana/envcheck/ping"
 )
 
 var (
@@ -19,7 +19,7 @@ var (
 )
 
 // Exec is the primary execution for the pinger application.
-func Exec(address string, info envcheck.DownwardInfo, c *http.Client) error {
+func Exec(address string, info ping.DownwardInfo, c *http.Client) error {
 	log.Printf("pinger=%s ping=%s pod=%s/%s podIP=%s nodeIP=%s", Revision, address, info.Namespace, info.Name, info.PodIP, info.NodeIP)
 	publish("address", address)
 	publish("name", info.Name)
@@ -27,14 +27,14 @@ func Exec(address string, info envcheck.DownwardInfo, c *http.Client) error {
 	publish("nodeIP", info.NodeIP)
 	publish("podIP", info.PodIP)
 
-	client := envcheck.New(c)
+	client := ping.New(c)
 
-	ping(client, address, info)
+	pingLoop(client, address, info)
 
 	return nil
 }
 
-func ping(client *envcheck.Client, address string, info envcheck.DownwardInfo) {
+func pingLoop(client *ping.Client, address string, info ping.DownwardInfo) {
 	success := false
 	for true {
 		err := client.Ping(address, info)
@@ -55,7 +55,7 @@ func ping(client *envcheck.Client, address string, info envcheck.DownwardInfo) {
 func main() {
 	var host string
 	var port string
-	var downward envcheck.DownwardInfo
+	var downward ping.DownwardInfo
 
 	flag.StringVar(&host, "address", os.Getenv("PINGHOST"), "the host to ping.")
 	flag.StringVar(&port, "port", os.Getenv("PINGPORT"), "the port to ping.")

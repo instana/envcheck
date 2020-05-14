@@ -1,4 +1,4 @@
-envcheck ![Status: Beta](https://img.shields.io/badge/Status-BETA-YELLOW.svg)
+envcheck ![status: Beta](https://img.shields.io/badge/Status-BETA-YELLOW.svg)
 =============================================================================
 
 [![Godoc](https://godoc.org/github.com/instana/envcheck?status.svg)](https://godoc.org/github.com/instana/envcheck) [![Go Report Card](https://goreportcard.com/badge/github.com/instana/envcheck)](https://goreportcard.com/report/github.com/instana/envcheck) [![CodeBuild Badge](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoialJ0L0lFUlFraEJKNU1tYVcwcDZWN3d4M2lJMjZTM003TG9OYXZOVndlSXNxQnlQeGt4NjVQUmpRa3pqcUdnajcrLzd3MWtxYnkyckpDWmFHT2ZMMVBnPSIsIml2UGFyYW1ldGVyU3BlYyI6IksyckVKVXc0V2NoYkRxQ0giLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://us-west-2.console.aws.amazon.com/codesuite/codebuild/projects/envcheck/history) ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/instana/envcheck) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/instana/envcheck)
@@ -12,7 +12,8 @@ Overview
 
 The following components are provided by this repository:
 
-- **envcheckctl** - CLI tool that remotely inspects a cluster.
+- **envcheckctl** - CLI tool that remotely inspects a cluster and dump to JSON.
+- **envcheckctl** - load JSON dump for offline inspection.
 - **pinger** - in cluster service that verifies connectivity from a specified
   namespace to the Instana agents namespace.
 - **daemon** - in cluster service that binds in the Instana agent namespace.
@@ -28,6 +29,8 @@ Current Capabilities
 Future Capabilities
 -------------------
 
+ * Find k8s leader.
+ * Inject a profiler into a pod.
  * Add instana-agent config map to the JSON dump.
  * Check access to backend from all daemonsets.
  * Check API permissions.
@@ -43,6 +46,8 @@ Install Requirements
   binary for your OS.
 
 ### Running envcheckctl
+
+#### Pull Debug Data
 
 The application envcheckctl is capable of collecting data to aid in debugging a
  cluster.
@@ -61,6 +66,30 @@ $ envcheckctl
 2020/05/02 19:33:48 pods=33, running=33, nodes=3, containers=36, namespaces=3, deployments=17, daemonsets=5, statefulsets=0, duration=955.355516ms
 # suggested agent sizing
 2020/05/02 19:33:48 sizing=instana-agent cpurequests=500m cpulimits=1.5 memoryrequests=512Mi memorylimits=512Mi heap=170M
+```
+
+#### Load Debug Data
+
+```bash
+# load dump from disk
+envcheckctl -podfile=cluster-info-1589217975.json
+# cluster info
+2020/05/14 11:54:58 envcheckctl=, cluster=https://192.168.253.100:6443, podfile=cluster-info-1589217975.json
+# note: reported duration is the duration of the original query and not load time.
+2020/05/14 11:54:58 pods=17, running=17, nodes=3, containers=17, namespaces=4, deployments=5, daemonsets=3, statefulsets=0, duration=20.66ms
+2020/05/14 11:54:58 sizing=instana-agent cpurequests=500m cpulimits=1.5 memoryrequests=512Mi memorylimits=512Mi heap=170M
+```
+
+#### Profile Pod (Under development)
+
+```bash
+# profile the Instana k8s leader
+envcheckctl -namespace=instana-agent-2 -leader -profile=profile.tgz
+# outputs profile-instana-agent-2-instana-agent-x1z2a-${TS}.tgz
+
+# profile arbitrary pod
+envcheckctl -namespace=default -pod=mypod-x1z2a -profile
+# outputs profile-default-mypod-x1z2a-${TS}.tgz
 ```
 
 ### Running Daemon
