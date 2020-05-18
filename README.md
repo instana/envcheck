@@ -83,6 +83,9 @@ envcheckctl -podfile=cluster-info-1589217975.json
 #### Profile Pod (Under development)
 
 ```bash
+# print the leader pod as defined by the instana end-point
+envcheckctl -leader
+
 # profile the Instana k8s leader
 envcheckctl -namespace=instana-agent-2 -leader -profile=profile.tgz
 # outputs profile-instana-agent-2-instana-agent-x1z2a-${TS}.tgz
@@ -186,4 +189,3 @@ kubectl run -it --rm --restart=Never alpine --image=alpine sh
  # http request to the ping end-point for a node
 wget -q -S -O - http://${NODE_IP}:42699/ping && echo ''
 ```
-
