@@ -15,4 +15,4 @@ phases:
     commands:
       - make -j4 publish
     finally:
-      - bash <(curl -s https://codecov.io/bash)
+      - bash -c "bash <(curl -s https://codecov.io/bash)"
