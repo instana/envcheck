@@ -7,6 +7,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	typev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	// imports all auth methods for kubernetes go client.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -33,13 +34,17 @@ func New(kubeconfig string) (*KubernetesQuery, error) {
 		return nil, err
 	}
 
-	return &KubernetesQuery{config.Host, clientset}, nil
+	return NewQuery(config.Host, clientset.CoreV1()), nil
+}
+
+func NewQuery(h string, cs typev1.CoreV1Interface) *KubernetesQuery {
+	return &KubernetesQuery{h, cs}
 }
 
 // KubernetesQuery is a concrete Kubernetes client to query various cluster info.
 type KubernetesQuery struct {
 	host string
-	*kubernetes.Clientset
+	typev1.CoreV1Interface
 }
 
 // Host provides the host info for the cluster.
@@ -54,7 +59,7 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 	namespaces := make(map[string]bool)
 
 	for true {
-		pods, err := q.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{Limit: 100, Continue: cont})
+		pods, err := q.Pods("").List(context.TODO(), metav1.ListOptions{Limit: 100, Continue: cont})
 		if err != nil {
 			return nil, err
 		}
