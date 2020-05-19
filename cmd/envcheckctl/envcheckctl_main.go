@@ -93,7 +93,8 @@ func Exec(kubeconfig string, isLive bool, podfile string) {
 		os.Exit(1)
 	}
 
-	index := cluster.IndexFrom(info)
+	index := cluster.NewIndex()
+	info.Apply(index)
 	summary := index.Summary()
 
 	log.Printf("pods=%d, running=%d, nodes=%d, containers=%d, namespaces=%d, deployments=%d, daemonsets=%d, statefulsets=%d, duration=%v\n",

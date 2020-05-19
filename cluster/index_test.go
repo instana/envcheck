@@ -39,6 +39,7 @@ func owner(t string) map[string]string {
 }
 
 func Test_Each_increments_unique_namespaces(t *testing.T) {
+	t.Parallel()
 	ns1 := cluster.PodInfo{Namespace: "one", Owners: owner(cluster.ReplicaSet)}
 	ns2 := cluster.PodInfo{Namespace: "two", Owners: owner(cluster.ReplicaSet)}
 
@@ -55,7 +56,10 @@ func Test_Each_increments_unique_namespaces(t *testing.T) {
 }
 
 func Test_Each_container_increments_containers(t *testing.T) {
-	container1 := cluster.PodInfo{Host: "one", Name: "pod-1", Containers: []cluster.ContainerInfo{container("instana")}, Owners: owner(cluster.ReplicaSet)}
+	t.Parallel()
+	// unnamed container
+	container1 := cluster.PodInfo{Host: "one", Name: "pod-1", Containers: []cluster.ContainerInfo{container("")}, Owners: owner(cluster.ReplicaSet)}
+	// named container with sidecar
 	container2 := cluster.PodInfo{Host: "two", Name: "pod-2", Containers: []cluster.ContainerInfo{container("instana"), container("leader")}, Owners: owner(cluster.ReplicaSet)}
 
 	index := cluster.NewIndex()
@@ -78,6 +82,7 @@ func container(name string) cluster.ContainerInfo {
 }
 
 func Test_Each_increments_unique_hosts(t *testing.T) {
+	t.Parallel()
 	host1 := cluster.PodInfo{Host: "one", Name: "pod-1", Owners: owner(cluster.ReplicaSet)}
 	host2 := cluster.PodInfo{Host: "two", Name: "pod-2", Owners: owner(cluster.ReplicaSet)}
 
@@ -94,6 +99,7 @@ func Test_Each_increments_unique_hosts(t *testing.T) {
 }
 
 func Test_Each_increments_by_owner_type(t *testing.T) {
+	t.Parallel()
 	testCases := map[string]struct {
 		pod     cluster.PodInfo
 		summary cluster.Summary
@@ -101,9 +107,11 @@ func Test_Each_increments_by_owner_type(t *testing.T) {
 		"should increment daemonset":   {cluster.PodInfo{Owners: owner(cluster.DaemonSet)}, cluster.Summary{DaemonSets: 1, Namespaces: 1, Nodes: 1, Pods: 1}},
 		"should increment deployment":  {cluster.PodInfo{Owners: owner(cluster.ReplicaSet)}, cluster.Summary{Deployments: 1, Namespaces: 1, Nodes: 1, Pods: 1}},
 		"should increment statefulset": {cluster.PodInfo{Owners: owner(cluster.StatefulSet)}, cluster.Summary{StatefulSets: 1, Namespaces: 1, Nodes: 1, Pods: 1}},
+		"should increment running":     {cluster.PodInfo{Owners: owner(cluster.ReplicaSet), IsRunning: true}, cluster.Summary{Deployments: 1, Namespaces: 1, Nodes: 1, Pods: 1, Running: 1}},
 	}
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			index := cluster.NewIndex()
 			index.Each(tc.pod)

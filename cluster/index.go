@@ -5,15 +5,7 @@ import (
 	"strconv"
 )
 
-// IndexFrom creates a new cluster index for relevant cluster entities.
-func IndexFrom(info *Info) *Index {
-	index := NewIndex()
-
-	info.Apply(index)
-
-	return index
-}
-
+// NewIndex builds a new empty index for PodInfo.
 func NewIndex() *Index {
 	return &Index{
 		Containers:   make(Set),
@@ -66,8 +58,11 @@ func (index *Index) Summary() Summary {
 }
 
 const (
-	DaemonSet   = "DaemonSet"
-	ReplicaSet  = "ReplicaSet"
+	// DaemonSet is the related owner key for that type of k8s entity.
+	DaemonSet = "DaemonSet"
+	// ReplicaSet is the related owner key for that type of k8s entity.
+	ReplicaSet = "ReplicaSet"
+	// StatefulSet is the related owner key for that type of k8s entity.
 	StatefulSet = "StatefulSet"
 )
 
@@ -113,10 +108,4 @@ func (s Set) Add(item string) {
 // Len lists the number of items in the set.
 func (s Set) Len() int {
 	return len(s)
-}
-
-// Contains tests if the item is found in the set.
-func (s Set) Contains(item string) bool {
-	_, present := s[item]
-	return present
 }
