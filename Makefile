@@ -1,4 +1,4 @@
-SHELL := /bin/bash -eu -o pipefail
+SHELL := /bin/bash -eu
 CMDS := $(wildcard cmd/*)
 IMGS := ${DOCKER_REPO}/envcheck-pinger ${DOCKER_REPO}/envcheck-daemon
 SRC := $(wildcard cmd/**/*.go) $(wildcard *.go)
