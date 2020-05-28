@@ -1,4 +1,4 @@
-SHELL := /bin/bash -eu
+SHELL := /bin/bash -eu -o pipefail
 CMDS := $(wildcard cmd/*)
 IMGS := ${DOCKER_REPO}/envcheck-pinger ${DOCKER_REPO}/envcheck-daemon
 SRC := $(wildcard cmd/**/*.go) $(wildcard *.go)
@@ -57,7 +57,7 @@ lint.out: $(SRC)
 # clean the generated files
 .PHONY: clean
 clean:
-	rm -f *.out
+	rm -f *.out envcheckctl.*
 	go clean -i ./...
 
 # build a docker container per service

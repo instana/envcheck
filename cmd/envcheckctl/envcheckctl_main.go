@@ -49,14 +49,49 @@ func LoadInfo(r io.Reader) (*cluster.Info, error) {
 }
 
 // Exec is the primary execution for the envcheckctl application.
-func Exec(kubeconfig string, isLive bool, podfile string) {
+func Exec(config EnvcheckConfig) {
 	var info *cluster.Info
 
-	// if podfile is set, disable live query
-	isLive = podfile == ""
+	if config.ApplyDaemon || config.ApplyPinger {
+		command, err := cluster.NewCommand(config.Kubeconfig)
+		if err != nil {
+			log.Fatalf("error initialising cluster command: %v\n", err)
+		}
 
-	if isLive {
-		query, err := cluster.New(kubeconfig)
+		if config.ApplyDaemon {
+			dc := cluster.DaemonConfig{
+				Image:     "instana/envcheck-daemon:latest",
+				Namespace: config.AgentNamespace,
+				Host:      "0.0.0.0",
+				Port:      42700,
+				Version:   Revision,
+			}
+			err := command.CreateDaemon(dc)
+			if err != nil {
+				log.Fatalf("error creating daemon: %v\n", err)
+			}
+		}
+
+		if config.ApplyPinger {
+			pc := cluster.PingerConfig{
+				Image:     "instana/envcheck-pinger:latest",
+				Namespace: config.PingerNamespace,
+				Version:   Revision,
+				Port:      42700,
+			}
+			err := command.CreatePinger(pc)
+			if err != nil {
+				log.Fatalf("error creating ping client: %v\n", err)
+			}
+		}
+		return
+	}
+
+	// if podfile is set, disable live query
+	config.IsLive = config.Podfile == ""
+
+	if config.IsLive {
+		query, err := cluster.New(config.Kubeconfig)
 		if err != nil {
 			log.Fatalf("error initialising cluster query: %v\n", err)
 		}
@@ -79,14 +114,14 @@ func Exec(kubeconfig string, isLive bool, podfile string) {
 			log.Fatalln(err)
 		}
 		log.Printf("podfile=%s", filename)
-	} else if podfile != "" {
-		r, err := os.Open(podfile)
+	} else if config.Podfile != "" {
+		r, err := os.Open(config.Podfile)
 		info, err = LoadInfo(r)
 		r.Close()
 		if err != nil {
 			log.Fatalf("error loading cluster info: %v\n", err)
 		}
-		log.Printf("envcheckctl=%s, cluster=%v, podfile=%v\n", Revision, info.Name, podfile)
+		log.Printf("envcheckctl=%s, cluster=%v, podfile=%v\n", Revision, info.Name, config.Podfile)
 	} else {
 		fmt.Println("Either a podfile must be provided or live must be set to true")
 		flag.Usage()
@@ -117,17 +152,29 @@ func Exec(kubeconfig string, isLive bool, podfile string) {
 		size.Heap)
 }
 
-func main() {
-	var kubeconfig string
-	var podfile string
-	var isLive bool
+type EnvcheckConfig struct {
+	AgentNamespace  string
+	ApplyDaemon     bool
+	ApplyPinger     bool
+	IsLive          bool
+	Kubeconfig      string
+	PingerNamespace string
+	Podfile         string
+}
 
-	flag.BoolVar(&isLive, "live", true, "retrieve pods from cluster")
-	flag.StringVar(&podfile, "podfile", "", "podfile")
-	flag.StringVar(&kubeconfig, "kubeconfig", configPath(), "absolute path to the kubeconfig file")
+func main() {
+	var config EnvcheckConfig
+
+	flag.StringVar(&config.AgentNamespace, "agentns", "instana-agent", "Instana agent namespace")
+	flag.StringVar(&config.Kubeconfig, "kubeconfig", configPath(), "absolute path to the kubeconfig file")
+	flag.BoolVar(&config.ApplyDaemon, "daemon", false, "deploy daemon to cluster")
+	flag.BoolVar(&config.ApplyPinger, "ping", false, "deploy ping client to cluster")
+	flag.BoolVar(&config.IsLive, "live", true, "retrieve pods from cluster")
+	flag.StringVar(&config.PingerNamespace, "pingns", "default", "ping client namespace")
+	flag.StringVar(&config.Podfile, "podfile", "", "podfile")
 	flag.Parse()
 
-	Exec(kubeconfig, isLive, podfile)
+	Exec(config)
 }
 
 func configPath() string {
