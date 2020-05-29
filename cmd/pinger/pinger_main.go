@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/instana/envcheck/ping"
+	"github.com/jackpal/gateway"
 )
 
 var (
@@ -20,7 +21,11 @@ var (
 
 // Exec is the primary execution for the pinger application.
 func Exec(address string, info ping.DownwardInfo, c *http.Client) error {
-	log.Printf("pinger=%s ping=%s pod=%s/%s podIP=%s nodeIP=%s", Revision, address, info.Namespace, info.Name, info.PodIP, info.NodeIP)
+	gw, err := gateway.DiscoverGateway()
+	if err != nil {
+		log.Printf("discovergateway=failure pod=%s/%s err='%v'", info.Namespace, info.Name, err)
+	}
+	log.Printf("pinger=%s ping=%s pod=%s/%s podIP=%s nodeIP=%s gw=%v", Revision, address, info.Namespace, info.Name, info.PodIP, info.NodeIP, gw)
 	publish("address", address)
 	publish("name", info.Name)
 	publish("namespace", info.Namespace)
@@ -69,7 +74,7 @@ func main() {
 	client := newClient()
 	err := Exec(fmt.Sprintf("%s:%s", host, port), downward, client)
 	if err != nil {
-		log.Printf("status=shutdown error='%v'\n", err)
+		log.Printf("status=shutdown pod=%s/%s error='%v'\n", downward.Namespace, downward.Name, err)
 		os.Exit(1)
 	}
 }
