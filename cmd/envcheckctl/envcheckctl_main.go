@@ -178,6 +178,10 @@ func main() {
 }
 
 func configPath() string {
+	env := os.Getenv("KUBECONFIG")
+	if env != "" {
+		return env
+	}
 	usr, err := user.Current()
 	if err != nil {
 		log.Println(err)
