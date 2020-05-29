@@ -114,7 +114,6 @@ func Pinger(config PingerConfig) *appsv1.DaemonSet {
 					},
 				},
 				Spec: v1.PodSpec{
-					HostNetwork: true,
 					Containers: []v1.Container{
 						{
 							Name:            PingerName,
