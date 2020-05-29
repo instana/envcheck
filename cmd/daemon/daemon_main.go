@@ -16,16 +16,20 @@ var (
 
 // Exec is the primary execution for the daemon application.
 func Exec(address string, info DownwardInfo) error {
-	log.Printf("daemon=%s listen=%s pod=%s/%s podIP=%s nodeIP=%s", Revision, address, info.Namespace, info.Name, info.PodIP, info.NodeIP)
+	log.Printf("daemon=%s pod=%s/%s listen=%s podIP=%s nodeIP=%s", Revision, info.Namespace, info.Name, address, info.PodIP, info.NodeIP)
 	publish("address", address)
 	publish("name", info.Name)
 	publish("namespace", info.Namespace)
 	publish("nodeIP", info.NodeIP)
 	publish("podIP", info.PodIP)
 
-	_, err := MapInterfaces()
+	ifs, err := MapInterfaces()
 	if err != nil {
 		return err
+	}
+
+	for k, v := range ifs {
+		log.Printf("pod=%s/%s if=%s ips=%v\n", info.Namespace, info.Name, k, v)
 	}
 
 	http.HandleFunc("/ping", PingHandler(info))
@@ -81,7 +85,7 @@ func main() {
 	err := Exec(address, downward)
 
 	if err != nil {
-		log.Printf("status=shutdown error='%v'\n", err)
+		log.Printf("status=shutdown pod=%s/%s error='%v'\n", downward.Namespace, downward.Name, err)
 		os.Exit(-1)
 	}
 }
