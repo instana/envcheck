@@ -77,6 +77,7 @@ func Exec(config EnvcheckConfig) {
 				Image:     "instana/envcheck-pinger:latest",
 				Namespace: config.PingerNamespace,
 				Version:   Revision,
+				Host:      config.PingerHost,
 				Port:      42700,
 			}
 			err := command.CreatePinger(pc)
@@ -158,6 +159,7 @@ type EnvcheckConfig struct {
 	ApplyPinger     bool
 	IsLive          bool
 	Kubeconfig      string
+	PingerHost      string
 	PingerNamespace string
 	Podfile         string
 }
@@ -170,6 +172,7 @@ func main() {
 	flag.BoolVar(&config.ApplyDaemon, "daemon", false, "deploy daemon to cluster")
 	flag.BoolVar(&config.ApplyPinger, "ping", false, "deploy ping client to cluster")
 	flag.BoolVar(&config.IsLive, "live", true, "retrieve pods from cluster")
+	flag.StringVar(&config.PingerHost, "pinghost", "", "override IP or DNS name to ping. defaults to nodeIP")
 	flag.StringVar(&config.PingerNamespace, "pingns", "default", "ping client namespace")
 	flag.StringVar(&config.Podfile, "podfile", "", "podfile")
 	flag.Parse()

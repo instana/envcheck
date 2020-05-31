@@ -88,6 +88,7 @@ type PingerConfig struct {
 	Namespace string
 	Image     string
 	Version   string
+	Host      string
 	Port      int32
 }
 
@@ -130,7 +131,7 @@ func Pinger(config PingerConfig) *appsv1.DaemonSet {
 								FieldPath("NAMESPACE", "metadata.namespace"),
 								FieldPath("NODEIP", "status.hostIP"),
 								FieldPath("PODIP", "status.podIP"),
-								FieldPath("PINGHOST", "status.hostIP"),
+								PingHost(config.Host),
 								{Name: "PINGPORT", Value: fmt.Sprintf("%d", config.Port)},
 							},
 						},
@@ -143,6 +144,15 @@ func Pinger(config PingerConfig) *appsv1.DaemonSet {
 
 type ServiceConfig struct {
 	Namespace string
+}
+
+func PingHost(host string) v1.EnvVar {
+	const name = "PINGHOST"
+	if host == "" {
+		return FieldPath(name, "status.hostIP")
+	}
+
+	return v1.EnvVar{Name: name, Value: host}
 }
 
 func FieldPath(name, path string) v1.EnvVar {
