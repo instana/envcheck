@@ -74,7 +74,10 @@ func (index *Index) Each(pod PodInfo) {
 		index.Running.Add(qualifiedName)
 	}
 	index.Namespaces.Add(pod.Namespace)
-	index.Nodes.Add(pod.Host)
+
+	if pod.Host != "" {
+		index.Nodes.Add(pod.Host)
+	}
 
 	for i, c := range pod.Containers {
 		var name = c.Name
