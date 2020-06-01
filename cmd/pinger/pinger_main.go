@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/instana/envcheck/network"
 	"github.com/instana/envcheck/ping"
 	"github.com/jackpal/gateway"
 )
@@ -31,6 +32,15 @@ func Exec(address string, info ping.DownwardInfo, c *http.Client) error {
 	publish("namespace", info.Namespace)
 	publish("nodeIP", info.NodeIP)
 	publish("podIP", info.PodIP)
+
+	ifs, err := network.MapInterfaces()
+	if err != nil {
+		return err
+	}
+
+	for k, v := range ifs {
+		log.Printf("pod=%s/%s if=%s ips=%v\n", info.Namespace, info.Name, k, v)
+	}
 
 	client := ping.New(c)
 

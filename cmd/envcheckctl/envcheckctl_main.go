@@ -164,20 +164,75 @@ type EnvcheckConfig struct {
 	Podfile         string
 }
 
+var (
+	ErrNoSubcommand      = fmt.Errorf("no sub-command specified")
+	ErrInvalidSubcommand = fmt.Errorf("invalid sub-command specified")
+)
+
+func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error) {
+	var fs []*flag.FlagSet
+
+	var daemonConfig = EnvcheckConfig{ApplyDaemon: true}
+	daemonFlags := flag.NewFlagSet("daemon", flag.ExitOnError)
+	daemonFlags.StringVar(&daemonConfig.AgentNamespace, "ns", "instana-agent", "daemon namespace")
+	daemonFlags.StringVar(&daemonConfig.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
+	daemonFlags.SetOutput(w)
+	fs = append(fs, daemonFlags)
+
+	var inspectConfig = EnvcheckConfig{}
+	inspectFlags := flag.NewFlagSet("inspect", flag.ExitOnError)
+	inspectFlags.BoolVar(&inspectConfig.IsLive, "live", true, "retrieve pods from cluster")
+	inspectFlags.StringVar(&inspectConfig.AgentNamespace, "agentns", "instana-agent", "Instana agent namespace")
+	inspectFlags.StringVar(&inspectConfig.Podfile, "podfile", "", "podfile")
+	inspectFlags.StringVar(&inspectConfig.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
+	inspectFlags.SetOutput(w)
+	fs = append(fs, inspectFlags)
+
+	var pingConfig = EnvcheckConfig{ApplyPinger: true}
+	pingFlags := flag.NewFlagSet("ping", flag.ExitOnError)
+	pingFlags.StringVar(&pingConfig.PingerHost, "host", "", "override IP or DNS name to ping. defaults to nodeIP if blank")
+	pingFlags.StringVar(&pingConfig.PingerNamespace, "ns", "default", "ping client namespace")
+	pingFlags.StringVar(&pingConfig.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
+	pingFlags.SetOutput(w)
+	fs = append(fs, pingFlags)
+
+	if len(args) < 2 {
+		w.Write([]byte("Usage: " + args[0] + " requires a subcommand\n"))
+		for _, v := range fs {
+			v.Usage()
+		}
+		return nil, ErrNoSubcommand
+	}
+
+	cmdArgs := args[2:]
+	switch args[1] {
+	case "daemon":
+		daemonFlags.Parse(cmdArgs)
+		return &daemonConfig, nil
+	case "inspect":
+		inspectFlags.Parse(cmdArgs)
+		return &inspectConfig, nil
+	case "ping":
+		pingFlags.Parse(cmdArgs)
+		return &pingConfig, nil
+	}
+
+	w.Write([]byte("Usage: " + args[0] + " requires a subcommand\n"))
+	for _, v := range fs {
+		w.Write([]byte("\n"))
+		v.Usage()
+	}
+	return nil, ErrInvalidSubcommand
+}
+
 func main() {
-	var config EnvcheckConfig
+	kubepath := configPath()
+	config, err := Parse(os.Args, kubepath, os.Stderr)
+	if err != nil {
+		os.Exit(1)
+	}
 
-	flag.StringVar(&config.AgentNamespace, "agentns", "instana-agent", "Instana agent namespace")
-	flag.StringVar(&config.Kubeconfig, "kubeconfig", configPath(), "absolute path to the kubeconfig file")
-	flag.BoolVar(&config.ApplyDaemon, "daemon", false, "deploy daemon to cluster")
-	flag.BoolVar(&config.ApplyPinger, "ping", false, "deploy ping client to cluster")
-	flag.BoolVar(&config.IsLive, "live", true, "retrieve pods from cluster")
-	flag.StringVar(&config.PingerHost, "pinghost", "", "override IP or DNS name to ping. defaults to nodeIP")
-	flag.StringVar(&config.PingerNamespace, "pingns", "default", "ping client namespace")
-	flag.StringVar(&config.Podfile, "podfile", "", "podfile")
-	flag.Parse()
-
-	Exec(config)
+	Exec(*config)
 }
 
 func configPath() string {
