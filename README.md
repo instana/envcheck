@@ -54,11 +54,11 @@ The application envcheckctl is capable of collecting data to aid in debugging a
 
 ```bash
 # use a specific kubeconfig file
-$ envcheckctl -kubeconfig $KUBECONFIG
+$ envcheckctl inspect -kubeconfig $KUBECONFIG
 # ...
 
 # use the default context for kubectl
-$ envcheckctl
+$ envcheckctl inspect
 # cluster connection
 2020/05/02 19:33:47 envcheckctl=997fe30, cluster=https://88fe4a1b-f913-432f-bb03-64c6fcda31dd.k8s.ondigitalocean.com, start=2020-05-02T19:33:47-03:00
 2020/05/02 19:33:47 Collecting pod details. Duration varies depending on the cluster.
@@ -72,7 +72,7 @@ $ envcheckctl
 
 ```bash
 # load dump from disk
-envcheckctl -podfile=cluster-info-1589217975.json
+envcheckctl inspect -podfile=cluster-info-1589217975.json
 # cluster info
 2020/05/14 11:54:58 envcheckctl=, cluster=https://192.168.253.100:6443, podfile=cluster-info-1589217975.json
 # note: reported duration is the duration of the original query and not load time.
@@ -84,14 +84,14 @@ envcheckctl -podfile=cluster-info-1589217975.json
 
 ```bash
 # print the leader pod as defined by the instana end-point
-envcheckctl -leader
+envcheckctl profile -leader
 
 # profile the Instana k8s leader
-envcheckctl -namespace=instana-agent-2 -leader -profile=profile.tgz
+envcheckctl profile -namespace=instana-agent-2 -leader -profile=profile.tgz
 # outputs profile-instana-agent-2-instana-agent-x1z2a-${TS}.tgz
 
 # profile arbitrary pod
-envcheckctl -namespace=default -pod=mypod-x1z2a -profile
+envcheckctl profile -namespace=default -pod=mypod-x1z2a -profile
 # outputs profile-default-mypod-x1z2a-${TS}.tgz
 ```
 
@@ -101,16 +101,16 @@ envcheckctl -namespace=default -pod=mypod-x1z2a -profile
 # optional only required if agent not installed.
 kubectl create namespace instana-agent
 # deploy daemon pods that bind to host network similar to the agent.
-kubectl apply -f https://github.com/instana/envcheck/releases/latest/download/daemon.yaml
+envcheckctl daemon
 # wait for all pods to have a status of Running without few if any restarts.
-kubectl get pods -l name=envchecker -n instana-agent -w
+kubectl get pods -l app.kubernetes.io/name=envchecker -n instana-agent -w
 ```
 
 The logs for the daemonset should be quiet with one log line per node. 
 This is the log output for a small 3 node cluster. **Note** by default it does
  not run a pod on the master nodes.
 ```
-kubectl logs -n instana-agent -l name=envchecker -f
+kubectl logs -n instana-agent -l app.kubernetes.io/name=envchecker -f
 2020/04/29 19:46:06 daemon=7c09e63 listen=0.0.0.0:42699 pod=instana-agent/envchecker-4g7bt podIP=192.168.253.101 nodeIP=192.168.253.101
 2020/04/29 19:46:06 daemon=7c09e63 listen=0.0.0.0:42699 pod=instana-agent/envchecker-9qggf podIP=192.168.253.102 nodeIP=192.168.253.102
 ```
@@ -119,15 +119,20 @@ kubectl logs -n instana-agent -l name=envchecker -f
 
 ```bash
 # install the pinger to the default namespace.
-kubectl apply -f https://github.com/instana/envcheck/releases/latest/download/pinger.yaml
+envcheckctl ping
 # wait for all pods to have a status of Running. There should be no restarts.
-kubectl get pods -l name=pinger -n default -w
+kubectl get pods -l app.kubernetes.io/name=pinger -n default -w
+
+# install pinger to another namespace and ping the daemon on the specified host
+envcheckctl ping -ns=other-namespace -pinghost=localhost
+# wait for all pods to have a status of Running. There should be no restarts.
+kubectl get pods -l app.kubernetes.io/name=pinger -n other-namespace -w
 ```
 
 Logs can be retrieved with the following command:
 
 ```bash
-kubectl logs -l name=pinger -n default -f
+kubectl logs -l app.kubernetes.io/name=pinger -n $NAMESPACE -f
 ```
 
 If the pinger is able to communicate with the same host daemonset the logs
