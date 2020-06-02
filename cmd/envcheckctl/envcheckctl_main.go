@@ -74,11 +74,12 @@ func Exec(config EnvcheckConfig) {
 
 		if config.ApplyPinger {
 			pc := cluster.PingerConfig{
-				Image:     "instana/envcheck-pinger:latest",
-				Namespace: config.PingerNamespace,
-				Version:   Revision,
-				Host:      config.PingerHost,
-				Port:      42700,
+				Image:      "instana/envcheck-pinger:latest",
+				Namespace:  config.PingerNamespace,
+				Version:    Revision,
+				Host:       config.PingerHost,
+				Port:       42700,
+				UseGateway: config.UseGateway,
 			}
 			err := command.CreatePinger(pc)
 			if err != nil {
@@ -158,6 +159,7 @@ type EnvcheckConfig struct {
 	ApplyDaemon     bool
 	ApplyPinger     bool
 	IsLive          bool
+	UseGateway      bool
 	Kubeconfig      string
 	PingerHost      string
 	PingerNamespace string
@@ -193,6 +195,7 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 	pingFlags.StringVar(&pingConfig.PingerHost, "host", "", "override IP or DNS name to ping. defaults to nodeIP if blank")
 	pingFlags.StringVar(&pingConfig.PingerNamespace, "ns", "default", "ping client namespace")
 	pingFlags.StringVar(&pingConfig.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
+	pingFlags.BoolVar(&pingConfig.UseGateway, "use-gateway", false, "use the pods gateway as the host to ping")
 	pingFlags.SetOutput(w)
 	fs = append(fs, pingFlags)
 

@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/instana/envcheck/network"
@@ -21,12 +22,20 @@ var (
 )
 
 // Exec is the primary execution for the pinger application.
-func Exec(address string, info ping.DownwardInfo, c *http.Client) error {
+func Exec(host string, port int, info ping.DownwardInfo, c *http.Client) error {
 	gw, err := gateway.DiscoverGateway()
 	if err != nil {
-		log.Printf("discovergateway=failure pod=%s/%s err='%v'", info.Namespace, info.Name, err)
+		log.Printf("pod=%s/%s discovergateway=failure err='%v'", info.Namespace, info.Name, err)
 	}
-	log.Printf("pinger=%s ping=%s pod=%s/%s podIP=%s nodeIP=%s gw=%v", Revision, address, info.Namespace, info.Name, info.PodIP, info.NodeIP, gw)
+
+	if host == "" {
+		host = gw.String()
+		log.Printf("pod=%s/%s host=gateway(%s)", info.Namespace, info.Name, host)
+	}
+
+	address := fmt.Sprintf("%s:%d", host, port)
+
+	log.Printf("pod=%s/%s ping=%s podIP=%s nodeIP=%s gw=%v revision=%v", info.Namespace, info.Name, address, info.PodIP, info.NodeIP, gw, Revision)
 	publish("address", address)
 	publish("name", info.Name)
 	publish("namespace", info.Namespace)
@@ -55,13 +64,13 @@ func pingLoop(client *ping.Client, address string, info ping.DownwardInfo) {
 		err := client.Ping(address, info)
 		time.Sleep(5 * time.Second)
 		if err != nil {
-			log.Printf("ping=failure pod=%s/%s address=%s err='%v'", info.Namespace, info.Name, address, err)
+			log.Printf("pod=%s/%s ping=failure address=%s err='%v'", info.Namespace, info.Name, address, err)
 			success = false
 			continue
 		}
 
 		if !success {
-			log.Printf("ping=success pod=%s/%s address=%s\n", info.Namespace, info.Name, address)
+			log.Printf("pod=%s/%s ping=success address=%s\n", info.Namespace, info.Name, address)
 		}
 		success = true
 	}
@@ -69,11 +78,21 @@ func pingLoop(client *ping.Client, address string, info ping.DownwardInfo) {
 
 func main() {
 	var host string
-	var port string
+	var port int
 	var downward ping.DownwardInfo
+	var envPort = os.Getenv("PINGPORT")
+	var defaultPort = 42700
+	if envPort != "" {
+		p, err := strconv.Atoi(envPort)
+		if err != nil {
+			log.Printf("Error unable to convert $PINGPORT to int: %v\n", err)
+		} else {
+			defaultPort = p
+		}
+	}
 
 	flag.StringVar(&host, "address", os.Getenv("PINGHOST"), "the host to ping.")
-	flag.StringVar(&port, "port", os.Getenv("PINGPORT"), "the port to ping.")
+	flag.IntVar(&port, "port", defaultPort, "the port to ping.")
 	flag.StringVar(&downward.Name, "name", os.Getenv("NAME"), "name of this pod.")
 	flag.StringVar(&downward.Namespace, "namespace", os.Getenv("NAMESPACE"), "namespace this service is running in.")
 	flag.StringVar(&downward.NodeIP, "nodeip", os.Getenv("NODEIP"), "node IP this service is running on.")
@@ -82,9 +101,9 @@ func main() {
 	flag.Parse()
 
 	client := newClient()
-	err := Exec(fmt.Sprintf("%s:%s", host, port), downward, client)
+	err := Exec(host, port, downward, client)
 	if err != nil {
-		log.Printf("status=shutdown pod=%s/%s error='%v'\n", downward.Namespace, downward.Name, err)
+		log.Printf("pod=%s/%s status=shutdown error='%v'\n", downward.Namespace, downward.Name, err)
 		os.Exit(1)
 	}
 }

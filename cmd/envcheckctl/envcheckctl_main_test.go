@@ -17,6 +17,7 @@ func Test_parse_flags(t *testing.T) {
 		"daemon":             {[]string{"envcheckctl", "daemon"}, &EnvcheckConfig{ApplyDaemon: true, AgentNamespace: "instana-agent"}, nil},
 		"inspect":            {[]string{"envcheckctl", "inspect"}, &EnvcheckConfig{AgentNamespace: "instana-agent", IsLive: true}, nil},
 		"ping":               {[]string{"envcheckctl", "ping"}, &EnvcheckConfig{ApplyPinger: true, PingerNamespace: "default"}, nil},
+		"ping using gateway": {[]string{"envcheckctl", "ping", "-use-gateway"}, &EnvcheckConfig{ApplyPinger: true, PingerNamespace: "default", UseGateway: true}, nil},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -30,9 +31,4 @@ func Test_parse_flags(t *testing.T) {
 			}
 		})
 	}
-
-}
-
-func Test_todo(t *testing.T) {
-	t.Skip("Add a test")
 }

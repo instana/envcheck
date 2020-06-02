@@ -85,11 +85,12 @@ func Daemon(config DaemonConfig) *appsv1.DaemonSet {
 }
 
 type PingerConfig struct {
-	Namespace string
-	Image     string
-	Version   string
-	Host      string
-	Port      int32
+	Namespace  string
+	Image      string
+	Version    string
+	Host       string
+	Port       int32
+	UseGateway bool
 }
 
 func Pinger(config PingerConfig) *appsv1.DaemonSet {
@@ -131,7 +132,7 @@ func Pinger(config PingerConfig) *appsv1.DaemonSet {
 								FieldPath("NAMESPACE", "metadata.namespace"),
 								FieldPath("NODEIP", "status.hostIP"),
 								FieldPath("PODIP", "status.podIP"),
-								PingHost(config.Host),
+								PingHost(config.Host, config.UseGateway),
 								{Name: "PINGPORT", Value: fmt.Sprintf("%d", config.Port)},
 							},
 						},
@@ -146,8 +147,12 @@ type ServiceConfig struct {
 	Namespace string
 }
 
-func PingHost(host string) v1.EnvVar {
+func PingHost(host string, useGateway bool) v1.EnvVar {
 	const name = "PINGHOST"
+	if useGateway {
+		return v1.EnvVar{Name: name, Value: ""}
+	}
+
 	if host == "" {
 		return FieldPath(name, "status.hostIP")
 	}
