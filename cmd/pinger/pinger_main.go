@@ -23,19 +23,22 @@ var (
 
 // Exec is the primary execution for the pinger application.
 func Exec(host string, port int, info ping.DownwardInfo, c *http.Client) error {
+	log.SetFlags(log.LUTC | log.Lmsgprefix | log.LstdFlags)
+	log.SetPrefix(fmt.Sprintf("pod=%s/%s ", info.Namespace, info.Name))
+
 	gw, err := gateway.DiscoverGateway()
 	if err != nil {
-		log.Printf("pod=%s/%s discovergateway=failure err='%v'", info.Namespace, info.Name, err)
+		log.Printf("discovergateway=failure err='%v'", err)
 	}
 
 	if host == "" {
 		host = gw.String()
-		log.Printf("pod=%s/%s host=gateway(%s)", info.Namespace, info.Name, host)
+		log.Printf("host=gateway(%s)", host)
 	}
 
 	address := fmt.Sprintf("%s:%d", host, port)
 
-	log.Printf("pod=%s/%s ping=%s podIP=%s nodeIP=%s gw=%v revision=%v", info.Namespace, info.Name, address, info.PodIP, info.NodeIP, gw, Revision)
+	log.Printf("ping=%s podIP=%s nodeIP=%s gw=%v revision=%v", address, info.PodIP, info.NodeIP, gw, Revision)
 	publish("address", address)
 	publish("name", info.Name)
 	publish("namespace", info.Namespace)
@@ -48,7 +51,7 @@ func Exec(host string, port int, info ping.DownwardInfo, c *http.Client) error {
 	}
 
 	for k, v := range ifs {
-		log.Printf("pod=%s/%s if=%s ips=%v\n", info.Namespace, info.Name, k, v)
+		log.Printf("if=%s ips=%v\n", k, v)
 	}
 
 	client := ping.New(c)
@@ -64,13 +67,13 @@ func pingLoop(client *ping.Client, address string, info ping.DownwardInfo) {
 		err := client.Ping(address, info)
 		time.Sleep(5 * time.Second)
 		if err != nil {
-			log.Printf("pod=%s/%s ping=failure address=%s err='%v'", info.Namespace, info.Name, address, err)
+			log.Printf("ping=%s status=failed err='%v'", address, err)
 			success = false
 			continue
 		}
 
 		if !success {
-			log.Printf("pod=%s/%s ping=success address=%s\n", info.Namespace, info.Name, address)
+			log.Printf("ping=%s status=success\n", address)
 		}
 		success = true
 	}
@@ -103,7 +106,7 @@ func main() {
 	client := newClient()
 	err := Exec(host, port, downward, client)
 	if err != nil {
-		log.Printf("pod=%s/%s status=shutdown error='%v'\n", downward.Namespace, downward.Name, err)
+		log.Printf("status=shutdown error='%v'\n", err)
 		os.Exit(1)
 	}
 }

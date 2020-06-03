@@ -3,3 +3,5 @@
 /envcheckctl.*
 /cluster-info*.json
 /coverage.html
+/envcheck-pinger
+/envcheck-daemon

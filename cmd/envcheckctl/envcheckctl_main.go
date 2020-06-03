@@ -200,7 +200,7 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 	fs = append(fs, pingFlags)
 
 	if len(args) < 2 {
-		w.Write([]byte("Usage: " + args[0] + " requires a subcommand\n"))
+		w.Write([]byte("Usage: " + args[0] + " requires a subcommand (rev. " + Revision + ")\n"))
 		for _, v := range fs {
 			v.Usage()
 		}
@@ -220,7 +220,7 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 		return &pingConfig, nil
 	}
 
-	w.Write([]byte("Usage: " + args[0] + " requires a subcommand\n"))
+	w.Write([]byte("Usage: " + args[0] + " requires a subcommand (rev. " + Revision + ")\n"))
 	for _, v := range fs {
 		w.Write([]byte("\n"))
 		v.Usage()

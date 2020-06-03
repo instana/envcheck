@@ -1,14 +1,18 @@
 SHELL := /bin/bash -eu
 CMDS := $(wildcard cmd/*)
 IMGS := ${DOCKER_REPO}/envcheck-pinger ${DOCKER_REPO}/envcheck-daemon
-SRC := $(wildcard cmd/**/*.go) $(wildcard *.go)
+SRC := $(shell find . -name \*.go) # not win compatible but :shrug:
 GIT_SHA := $(shell git rev-parse --short HEAD)
+GO_LINUX := GOOS=linux GOARCH=amd64 go
+GO_OSX := GOOS=darwin GOARCH=amd64 go
+GO_WIN64 := GOOS=windows GOARCH=amd64 go
+EXE := envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64 envcheck-pinger envcheck-daemon
 
 .PHONY: all
 all: vet lint coverage envcheckctl
 
 .PHONY: publish
-publish: all $(IMGS)
+publish: docker
 
 .PHONY: test
 test: cover.out
@@ -23,16 +27,32 @@ lint: lint.out
 coverage: coverage.out
 
 .PHONY: envcheckctl
-envcheckctl: envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64
+envcheckctl: $(EXE)
 
 envcheckctl.exe: $(SRC)
-	GOOS=windows GOARCH=amd64 go build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
+	$(GO_WIN64) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
 
 envcheckctl.darwin64: $(SRC)
-	GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
+	$(GO_OSX) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
 
 envcheckctl.amd64: $(SRC)
-	GOOS=linux GOARCH=amd64 go build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
+	$(GO_LINUX) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
+
+envcheck-pinger: $(SRC)
+	$(GO_LINUX) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/pinger
+
+envcheck-daemon: $(SRC)
+	$(GO_LINUX) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/daemon
+
+# build and publish the docker containers
+.PHONY: docker
+docker: envcheck-daemon envcheck-pinger
+	docker build . -t $(DOCKER_REPO)/envcheck-daemon:latest -t $(DOCKER_REPO)/envcheck-daemon:${GIT_SHA} --build-arg CMD_PATH=./envcheck-daemon
+	docker push $(DOCKER_REPO)/envcheck-daemon:${GIT_SHA}
+	docker push $(DOCKER_REPO)/envcheck-daemon:latest
+	docker build . -t $(DOCKER_REPO)/envcheck-pinger:latest -t $(DOCKER_REPO)/envcheck-pinger:${GIT_SHA} --build-arg CMD_PATH=./envcheck-pinger
+	docker push $(DOCKER_REPO)/envcheck-pinger:${GIT_SHA}
+	docker push $(DOCKER_REPO)/envcheck-pinger:latest
 
 # run the tests with atomic coverage
 cover.out: $(SRC)
@@ -57,12 +77,6 @@ lint.out: $(SRC)
 # clean the generated files
 .PHONY: clean
 clean:
-	rm -f *.out envcheckctl.*
+	rm -f *.out $(EXE)
 	go clean -i ./...
-
-# build a docker container per service
-.PHONY: ${DOCKER_REPO}/
-${DOCKER_REPO}/%:
-	docker build . -t $@:latest -t $@:${GIT_SHA} --build-arg CMD_PATH=./cmd/$(subst ${DOCKER_REPO}/envcheck-,,$@) --build-arg GIT_SHA=${GIT_SHA}
-	docker push $@:${GIT_SHA}
-	docker push $@:latest
+	
