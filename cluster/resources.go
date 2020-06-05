@@ -10,11 +10,15 @@ import (
 )
 
 const (
+	// DaemonSetName is the resource name for the envchecker daemon set.
 	DaemonSetName = "envchecker"
-	ManagedBy     = "envcheckctl"
-	PingerName    = "pinger"
+	// ManagedBy is the resource managed by identifier.
+	ManagedBy = "envcheckctl"
+	// PingerName is the resource name for the pinger daemon set.
+	PingerName = "pinger"
 )
 
+// DaemonConfig is the conffiguration for the envchecker daemon set.
 type DaemonConfig struct {
 	Namespace string
 	Image     string
@@ -23,10 +27,12 @@ type DaemonConfig struct {
 	Port      int32
 }
 
+// Address provides the combined host and port pair as an address.
 func (dc *DaemonConfig) Address() string {
 	return fmt.Sprintf("%s:%d", dc.Host, dc.Port)
 }
 
+// Daemon creates the envchecker daemon set resource from the provided DaemonConfig.
 func Daemon(config DaemonConfig) *appsv1.DaemonSet {
 	return &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -84,6 +90,7 @@ func Daemon(config DaemonConfig) *appsv1.DaemonSet {
 	}
 }
 
+// PingerConfig is the input configuration for the pinger DaemonSet.
 type PingerConfig struct {
 	Namespace  string
 	Image      string
@@ -93,6 +100,7 @@ type PingerConfig struct {
 	UseGateway bool
 }
 
+// Pinger creates the pinger DaemonSet resource from the provided PingerConfig.
 func Pinger(config PingerConfig) *appsv1.DaemonSet {
 	return &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -143,10 +151,7 @@ func Pinger(config PingerConfig) *appsv1.DaemonSet {
 	}
 }
 
-type ServiceConfig struct {
-	Namespace string
-}
-
+// PingHost outputs the "PINGHOST" env var key value based on host and useGateway.
 func PingHost(host string, useGateway bool) v1.EnvVar {
 	const name = "PINGHOST"
 	if useGateway {
@@ -160,6 +165,7 @@ func PingHost(host string, useGateway bool) v1.EnvVar {
 	return v1.EnvVar{Name: name, Value: host}
 }
 
+// FieldPath returns a single env var based on the given field name and path.
 func FieldPath(name, path string) v1.EnvVar {
 	return v1.EnvVar{
 		Name: name,
@@ -171,6 +177,7 @@ func FieldPath(name, path string) v1.EnvVar {
 	}
 }
 
+// Resources is the system resource contraints associated with an entity.
 type Resources struct {
 	RequestCPU    string
 	RequestMemory string
@@ -178,6 +185,7 @@ type Resources struct {
 	LimitMemory   string
 }
 
+// ResourceRequirements builds a kubernetes resource requirements from the provided Resources.
 func ResourceRequirements(resources Resources) v1.ResourceRequirements {
 	return v1.ResourceRequirements{
 		Requests: v1.ResourceList{

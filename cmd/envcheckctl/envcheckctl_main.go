@@ -154,6 +154,7 @@ func Exec(config EnvcheckConfig) {
 		size.Heap)
 }
 
+// EnvcheckConfig is the primary configuration parameters that control this exe.
 type EnvcheckConfig struct {
 	AgentNamespace  string
 	ApplyDaemon     bool
@@ -167,10 +168,13 @@ type EnvcheckConfig struct {
 }
 
 var (
-	ErrNoSubcommand      = fmt.Errorf("no sub-command specified")
-	ErrInvalidSubcommand = fmt.Errorf("invalid sub-command specified")
+	// ErrNoSubcommand occurs when too few arguments are supplied to the executable.
+	ErrNoSubcommand = fmt.Errorf("no sub-command specified")
+	// ErrUnknownSubcommand occurs when an unknown sub-command is specified.
+	ErrUnknownSubcommand = fmt.Errorf("invalid sub-command specified")
 )
 
+// Parse parses the individual subcommands and returns the related configuration.
 func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error) {
 	var fs []*flag.FlagSet
 
@@ -225,7 +229,7 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 		w.Write([]byte("\n"))
 		v.Usage()
 	}
-	return nil, ErrInvalidSubcommand
+	return nil, ErrUnknownSubcommand
 }
 
 func main() {

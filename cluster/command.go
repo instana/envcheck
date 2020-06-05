@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// NewCommand builds a new KubernetesCommand implementation with the given kubeconfig.
+// NewCommand allocates and returns a new Command.
 func NewCommand(kubeconfig string) (*KubernetesCommand, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
@@ -25,25 +25,25 @@ func NewCommand(kubeconfig string) (*KubernetesCommand, error) {
 	return &KubernetesCommand{clientset.AppsV1()}, nil
 }
 
+// Command provides an interface for creating envcheck entities in a cluster.
 type Command interface {
 	CreateDaemon(DaemonConfig) error
-	CreatePingerr(PingerConfig) error
-	CreateService(ServiceConfig) error
+	CreatePinger(PingerConfig) error
 }
 
+// KubernetesCommand is a k8s implementation of the Command interface.
 type KubernetesCommand struct {
 	appsv1.AppsV1Interface
 }
 
+// CreateDaemon applies a envchecker daemonset config to the current K8S environment.
 func (kc *KubernetesCommand) CreateDaemon(config DaemonConfig) error {
 	_, err := kc.DaemonSets(config.Namespace).Create(context.TODO(), Daemon(config), metav1.CreateOptions{})
 	return err
 }
+
+// CreatePinger applies a pinger daemonset config to the current K8S environment.
 func (kc *KubernetesCommand) CreatePinger(config PingerConfig) error {
 	_, err := kc.DaemonSets(config.Namespace).Create(context.TODO(), Pinger(config), metav1.CreateOptions{})
 	return err
-}
-
-func (kc *KubernetesCommand) CreateService(ServiceConfig) error {
-	return nil
 }

@@ -14,13 +14,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// Query is a query interface for the cluster.
-type Query interface {
-	// AllPods returns the list of pods from the related cluster.
-	AllPods() ([]PodInfo, error)
-	Host() string
-}
-
 // New builds a new KubernetesQuery implementation with the given kubeconfig.
 func New(kubeconfig string) (*KubernetesQuery, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -37,6 +30,14 @@ func New(kubeconfig string) (*KubernetesQuery, error) {
 	return NewQuery(config.Host, clientset.CoreV1()), nil
 }
 
+// Query is a query interface for the cluster.
+type Query interface {
+	// AllPods returns the list of pods from the related cluster.
+	AllPods() ([]PodInfo, error)
+	Host() string
+}
+
+// NewQuery allocates and returns a new Query.
 func NewQuery(h string, cs typev1.CoreV1Interface) *KubernetesQuery {
 	return &KubernetesQuery{h, cs}
 }
