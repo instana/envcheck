@@ -1,8 +1,8 @@
 package cluster_test
-
 import (
-	v1 "k8s.io/api/apps/v1"
 	"testing"
+
+	v1 "k8s.io/api/apps/v1"
 
 	"github.com/instana/envcheck/cluster"
 )
@@ -14,7 +14,6 @@ func Test_DaemonConfig_Namespace_should_change_manifests_namespace(t *testing.T)
 		t.Errorf("Namespace=%v, want <bloop>", resource.Namespace)
 	}
 }
-
 
 func Test_DaemonConfig_Version_should_change_manifests_version(t *testing.T) {
 	config := cluster.DaemonConfig{Version: "1234"}
