@@ -13,6 +13,6 @@ phases:
       - docker login --username $DOCKER_USER --password $DOCKER_PASSWORD
   build:
     commands:
-      - make -j4 all publish
+      - make -j2 all publish
     finally:
       - bash -c "bash <(curl -s https://codecov.io/bash)"

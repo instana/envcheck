@@ -12,7 +12,7 @@ EXE := envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64 envcheck-pinger en
 all: vet lint coverage envcheckctl
 
 .PHONY: publish
-publish: docker
+publish: docker-envcheck-daemon docker-envcheck-pinger
 
 .PHONY: test
 test: cover.out
@@ -44,13 +44,24 @@ envcheck-pinger: $(SRC)
 envcheck-daemon: $(SRC)
 	$(GO_LINUX) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/daemon
 
-# build and publish the docker containers
 .PHONY: docker
-docker: envcheck-daemon envcheck-pinger
+docker: docker-envcheck-daemon docker-envcheck-pinger
+
+.PHONY: docker-envcheck-daemon
+docker-envcheck-daemon: envcheck-daemon
 	docker build . -t $(DOCKER_REPO)/envcheck-daemon:latest -t $(DOCKER_REPO)/envcheck-daemon:${GIT_SHA} --build-arg CMD_PATH=./envcheck-daemon
+
+.PHONY: push-envcheck-daemon
+push-envcheck-daemon: docker-envcheck-daemon
 	docker push $(DOCKER_REPO)/envcheck-daemon:${GIT_SHA}
 	docker push $(DOCKER_REPO)/envcheck-daemon:latest
+
+.PHONY: docker-envcheck-pinger
+docker-envcheck-pinger: envcheck-pinger
 	docker build . -t $(DOCKER_REPO)/envcheck-pinger:latest -t $(DOCKER_REPO)/envcheck-pinger:${GIT_SHA} --build-arg CMD_PATH=./envcheck-pinger
+
+.PHONY: push-envcheck-pinger
+push-envcheck-pinger: docker-envcheck-pinger
 	docker push $(DOCKER_REPO)/envcheck-pinger:${GIT_SHA}
 	docker push $(DOCKER_REPO)/envcheck-pinger:latest
 
