@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/instana/envcheck/agent"
@@ -17,7 +18,7 @@ import (
 
 var (
 	// Revision is the Git commit SHA injected at compile time.
-	Revision string
+	Revision string = "dev"
 )
 
 // QueryLive queries a cluster for the latest data.
@@ -48,51 +49,48 @@ func LoadInfo(r io.Reader) (*cluster.Info, error) {
 	return &info, err
 }
 
-// Exec is the primary execution for the envcheckctl application.
-func Exec(config EnvcheckConfig) {
-	var info *cluster.Info
-
-	if config.ApplyDaemon || config.ApplyPinger {
-		command, err := cluster.NewCommand(config.Kubeconfig)
-		if err != nil {
-			log.Fatalf("error initialising cluster command: %v\n", err)
-		}
-
-		if config.ApplyDaemon {
-			dc := cluster.DaemonConfig{
-				Image:     "instana/envcheck-daemon:latest",
-				Namespace: config.AgentNamespace,
-				Host:      "0.0.0.0",
-				Port:      42700,
-				Version:   Revision,
-			}
-			err := command.CreateDaemon(dc)
-			if err != nil {
-				log.Fatalf("error creating daemon: %v\n", err)
-			}
-		}
-
-		if config.ApplyPinger {
-			pc := cluster.PingerConfig{
-				Image:      "instana/envcheck-pinger:latest",
-				Namespace:  config.PingerNamespace,
-				Version:    Revision,
-				Host:       config.PingerHost,
-				Port:       42700,
-				UseGateway: config.UseGateway,
-			}
-			err := command.CreatePinger(pc)
-			if err != nil {
-				log.Fatalf("error creating ping client: %v\n", err)
-			}
-		}
-		return
+func ExecDaemon(config EnvcheckConfig) {
+	command, err := cluster.NewCommand(config.Kubeconfig)
+	if err != nil {
+		log.Fatalf("createClient=failed err='%v'\n", err)
 	}
 
-	// if podfile is set, disable live query
-	config.IsLive = config.Podfile == ""
+	dc := cluster.DaemonConfig{
+		Image:     "instana/envcheck-daemon:latest",
+		Namespace: config.AgentNamespace,
+		Host:      "0.0.0.0",
+		Port:      42700,
+		Version:   Revision,
+	}
+	err = command.CreateDaemon(dc)
+	if err != nil {
+		log.Fatalf("createDaemon=failed err='%v'\n", err)
+	}
+}
 
-	if config.IsLive {
+func ExecPinger(config EnvcheckConfig) {
+	command, err := cluster.NewCommand(config.Kubeconfig)
+	if err != nil {
+		log.Fatalf("createClient=failed err='%v'\n", err)
+	}
+
+	pc := cluster.PingerConfig{
+		Image:      "instana/envcheck-pinger:latest",
+		Namespace:  config.PingerNamespace,
+		Version:    Revision,
+		Host:       config.PingerHost,
+		Port:       42700,
+		UseGateway: config.UseGateway,
+	}
+	err = command.CreatePinger(pc)
+	if err != nil {
+		log.Fatalf("createPinger=failed err='%v'\n", err)
+	}
+}
+
+func ExecInspect(config EnvcheckConfig) {
+	var info *cluster.Info
+	if config.IsLive() {
 		query, err := cluster.New(config.Kubeconfig)
 		if err != nil {
 			log.Fatalf("error initialising cluster query: %v\n", err)
@@ -118,16 +116,15 @@ func Exec(config EnvcheckConfig) {
 		log.Printf("podfile=%s", filename)
 	} else if config.Podfile != "" {
 		r, err := os.Open(config.Podfile)
+		if err != nil {
+			log.Fatalf("open=failed file=%s err='%v'\n", config.Podfile, err)
+		}
 		info, err = LoadInfo(r)
 		r.Close()
 		if err != nil {
-			log.Fatalf("error loading cluster info: %v\n", err)
+			log.Fatalf("read=failed file=%s err='%v'\n", config.Podfile, err)
 		}
 		log.Printf("envcheckctl=%s, cluster=%v, podfile=%v\n", Revision, info.Name, config.Podfile)
-	} else {
-		fmt.Println("Either a podfile must be provided or live must be set to true")
-		flag.Usage()
-		os.Exit(1)
 	}
 
 	index := cluster.NewIndex()
@@ -154,17 +151,31 @@ func Exec(config EnvcheckConfig) {
 		size.Heap)
 }
 
+// Exec is the primary execution for the envcheckctl application.
+func Exec(config EnvcheckConfig) {
+	switch config.Subcommand {
+	case ApplyDaemon:
+		ExecDaemon(config)
+	case ApplyPinger:
+		ExecPinger(config)
+	case InspectCluster:
+		ExecInspect(config)
+	}
+}
+
 // EnvcheckConfig is the primary configuration parameters that control this exe.
 type EnvcheckConfig struct {
 	AgentNamespace  string
-	ApplyDaemon     bool
-	ApplyPinger     bool
-	IsLive          bool
-	UseGateway      bool
 	Kubeconfig      string
 	PingerHost      string
 	PingerNamespace string
 	Podfile         string
+	Subcommand      int
+	UseGateway      bool
+}
+
+func (c *EnvcheckConfig) IsLive() bool {
+	return c.Podfile == ""
 }
 
 var (
@@ -174,27 +185,32 @@ var (
 	ErrUnknownSubcommand = fmt.Errorf("invalid sub-command specified")
 )
 
+const (
+	ApplyDaemon int = iota
+	ApplyPinger
+	InspectCluster
+)
+
 // Parse parses the individual subcommands and returns the related configuration.
 func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error) {
 	var fs []*flag.FlagSet
 
-	var daemonConfig = EnvcheckConfig{ApplyDaemon: true}
+	var daemonConfig = EnvcheckConfig{Subcommand: ApplyDaemon}
 	daemonFlags := flag.NewFlagSet("daemon", flag.ExitOnError)
 	daemonFlags.StringVar(&daemonConfig.AgentNamespace, "ns", "instana-agent", "daemon namespace")
 	daemonFlags.StringVar(&daemonConfig.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
 	daemonFlags.SetOutput(w)
 	fs = append(fs, daemonFlags)
 
-	var inspectConfig = EnvcheckConfig{}
+	var inspectConfig = EnvcheckConfig{Subcommand: InspectCluster}
 	inspectFlags := flag.NewFlagSet("inspect", flag.ExitOnError)
-	inspectFlags.BoolVar(&inspectConfig.IsLive, "live", true, "retrieve pods from cluster")
 	inspectFlags.StringVar(&inspectConfig.AgentNamespace, "agentns", "instana-agent", "Instana agent namespace")
-	inspectFlags.StringVar(&inspectConfig.Podfile, "podfile", "", "podfile")
+	inspectFlags.StringVar(&inspectConfig.Podfile, "podfile", "", "read from podfile instead of live cluster query")
 	inspectFlags.StringVar(&inspectConfig.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
 	inspectFlags.SetOutput(w)
 	fs = append(fs, inspectFlags)
 
-	var pingConfig = EnvcheckConfig{ApplyPinger: true}
+	var pingConfig = EnvcheckConfig{Subcommand: ApplyPinger}
 	pingFlags := flag.NewFlagSet("ping", flag.ExitOnError)
 	pingFlags.StringVar(&pingConfig.PingerHost, "host", "", "override IP or DNS name to ping. defaults to nodeIP if blank")
 	pingFlags.StringVar(&pingConfig.PingerNamespace, "ns", "default", "ping client namespace")
@@ -203,11 +219,11 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 	pingFlags.SetOutput(w)
 	fs = append(fs, pingFlags)
 
+	versionFlags := flag.NewFlagSet("version", flag.ExitOnError)
+	fs = append(fs, versionFlags)
+
 	if len(args) < 2 {
-		w.Write([]byte("Usage: " + args[0] + " requires a subcommand (rev. " + Revision + ")\n"))
-		for _, v := range fs {
-			v.Usage()
-		}
+		usage(args[0], w, fs)
 		return nil, ErrNoSubcommand
 	}
 
@@ -222,14 +238,21 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 	case "ping":
 		pingFlags.Parse(cmdArgs)
 		return &pingConfig, nil
+	case "version":
+		w.Write([]byte(fmt.Sprintf("%s=%s go=%s\n", args[0], Revision, runtime.Version())))
+		os.Exit(0)
 	}
 
-	w.Write([]byte("Usage: " + args[0] + " requires a subcommand (rev. " + Revision + ")\n"))
+	usage(args[0], w, fs)
+	return nil, ErrUnknownSubcommand
+}
+
+func usage(cmd string, w io.Writer, fs []*flag.FlagSet) {
+	w.Write([]byte("Usage: " + cmd + " requires a subcommand (rev. " + Revision + ")\n"))
 	for _, v := range fs {
 		w.Write([]byte("\n"))
 		v.Usage()
 	}
-	return nil, ErrUnknownSubcommand
 }
 
 func main() {

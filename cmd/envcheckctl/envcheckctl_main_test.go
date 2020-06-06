@@ -14,10 +14,11 @@ func Test_parse_flags(t *testing.T) {
 	}{
 		"no subcommand":      {[]string{"envcheckctl"}, nil, ErrNoSubcommand},
 		"invalid subcommand": {[]string{"envcheckctl", "foobar"}, nil, ErrNoSubcommand},
-		"daemon":             {[]string{"envcheckctl", "daemon"}, &EnvcheckConfig{ApplyDaemon: true, AgentNamespace: "instana-agent"}, nil},
-		"inspect":            {[]string{"envcheckctl", "inspect"}, &EnvcheckConfig{AgentNamespace: "instana-agent", IsLive: true}, nil},
-		"ping":               {[]string{"envcheckctl", "ping"}, &EnvcheckConfig{ApplyPinger: true, PingerNamespace: "default"}, nil},
-		"ping using gateway": {[]string{"envcheckctl", "ping", "-use-gateway"}, &EnvcheckConfig{ApplyPinger: true, PingerNamespace: "default", UseGateway: true}, nil},
+		"daemon":             {[]string{"envcheckctl", "daemon"}, &EnvcheckConfig{Subcommand: ApplyDaemon, AgentNamespace: "instana-agent"}, nil},
+		"inspect":            {[]string{"envcheckctl", "inspect"}, &EnvcheckConfig{Subcommand: InspectCluster, AgentNamespace: "instana-agent"}, nil},
+		"inspect offline":    {[]string{"envcheckctl", "inspect", "-podfile=foobar.json"}, &EnvcheckConfig{Subcommand: InspectCluster, AgentNamespace: "instana-agent", Podfile: "foobar.json"}, nil},
+		"ping":               {[]string{"envcheckctl", "ping"}, &EnvcheckConfig{Subcommand: ApplyPinger, PingerNamespace: "default"}, nil},
+		"ping using gateway": {[]string{"envcheckctl", "ping", "-use-gateway"}, &EnvcheckConfig{Subcommand: ApplyPinger, PingerNamespace: "default", UseGateway: true}, nil},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
