@@ -11,7 +11,7 @@ phases:
       docker: 19
     commands:
       - docker login --username $DOCKER_USER --password $DOCKER_PASSWORD
-      - go env GOPATH
+      - make deps
   build:
     commands:
       - make -j2 all publish

@@ -1,4 +1,4 @@
-SHELL := /bin/bash -eu
+SHELL := /bin/bash -eu -o pipefail
 CMDS := $(wildcard cmd/*)
 IMGS := ${DOCKER_REPO}/envcheck-pinger ${DOCKER_REPO}/envcheck-daemon
 SRC := $(shell find . -name \*.go) # not win compatible but :shrug:
@@ -8,7 +8,6 @@ GO_OSX := GOOS=darwin GOARCH=amd64 go
 GO_WIN64 := GOOS=windows GOARCH=amd64 go
 EXE := envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64 envcheck-pinger envcheck-daemon
 GOPATH := $(shell go env GOPATH)
-
 
 .PHONY: all
 all: vet lint coverage envcheckctl
@@ -30,6 +29,10 @@ coverage: coverage.out
 
 .PHONY: envcheckctl
 envcheckctl: $(EXE)
+
+.PHONY: deps
+deps:
+	go get -u golang.org/x/lint/golint
 
 envcheckctl.exe: $(SRC)
 	$(GO_WIN64) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
@@ -83,12 +86,9 @@ coverage.out: cover.out
 vet.out: $(SRC)
 	go vet github.com/instana/envcheck/... | tee vet.out
 
-$(GOPATH)/bin/golint:
-	go get -u golang.org/x/lint/golint
-
 # run the linter against the codebase
-lint.out: $(GOPATH)/bin/golint $(SRC)
-	$(GOPATH)/bin/golint ./... | tee lint.out
+lint.out: $(SRC)
+	$(shell go list -f {{.Target}} golang.org/x/lint/golint) ./... | tee lint.out
 
 # clean the generated files
 .PHONY: clean
