@@ -35,6 +35,7 @@ type Query interface {
 	// AllPods returns the list of pods from the related cluster.
 	AllPods() ([]PodInfo, error)
 	Host() string
+	Time() time.Time
 }
 
 // NewQuery allocates and returns a new Query.
@@ -46,6 +47,11 @@ func NewQuery(h string, cs typev1.CoreV1Interface) *KubernetesQuery {
 type KubernetesQuery struct {
 	host string
 	typev1.CoreV1Interface
+}
+
+// Time returns the current time.
+func (q *KubernetesQuery) Time() time.Time {
+	return time.Now()
 }
 
 // Host provides the host info for the cluster.

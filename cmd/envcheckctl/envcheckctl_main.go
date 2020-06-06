@@ -21,11 +21,11 @@ var (
 	Revision string = "dev"
 )
 
-// QueryLive queries a cluster for the latest data.
+// QueryLive queries a cluster and builds the cluster info from the current data.
 func QueryLive(query cluster.Query) (*cluster.Info, error) {
 	info := &cluster.Info{
 		Name:    query.Host(),
-		Started: time.Now(),
+		Started: query.Time(),
 	}
 
 	log.Printf("envcheckctl=%s, cluster=%v, start=%v\n", Revision, info.Name, info.Started.Format(time.RFC3339))
@@ -34,7 +34,7 @@ func QueryLive(query cluster.Query) (*cluster.Info, error) {
 	if err != nil {
 		return nil, err
 	}
-	info.Finished = time.Now()
+	info.Finished = query.Time()
 	info.Pods = pods
 	info.PodCount = len(pods)
 
@@ -151,6 +151,10 @@ func ExecInspect(config EnvcheckConfig) {
 		size.Heap)
 }
 
+func ExecVersion(w io.Writer) {
+	w.Write([]byte(fmt.Sprintf("revision=%s go=%s\n", Revision, runtime.Version())))
+}
+
 // Exec is the primary execution for the envcheckctl application.
 func Exec(config EnvcheckConfig) {
 	switch config.Subcommand {
@@ -160,6 +164,8 @@ func Exec(config EnvcheckConfig) {
 		ExecPinger(config)
 	case InspectCluster:
 		ExecInspect(config)
+	case PrintVersion:
+		ExecVersion(os.Stdout)
 	}
 }
 
@@ -189,6 +195,7 @@ const (
 	ApplyDaemon int = iota
 	ApplyPinger
 	InspectCluster
+	PrintVersion
 )
 
 // Parse parses the individual subcommands and returns the related configuration.
@@ -239,8 +246,7 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 		pingFlags.Parse(cmdArgs)
 		return &pingConfig, nil
 	case "version":
-		w.Write([]byte(fmt.Sprintf("%s=%s go=%s\n", args[0], Revision, runtime.Version())))
-		os.Exit(0)
+		return &EnvcheckConfig{Subcommand: PrintVersion}, nil
 	}
 
 	usage(args[0], w, fs)
