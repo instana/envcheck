@@ -7,6 +7,8 @@ GO_LINUX := GOOS=linux GOARCH=amd64 go
 GO_OSX := GOOS=darwin GOARCH=amd64 go
 GO_WIN64 := GOOS=windows GOARCH=amd64 go
 EXE := envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64 envcheck-pinger envcheck-daemon
+GOPATH := $(shell go env GOPATH)
+
 
 .PHONY: all
 all: vet lint coverage envcheckctl
@@ -81,9 +83,12 @@ coverage.out: cover.out
 vet.out: $(SRC)
 	go vet github.com/instana/envcheck/... | tee vet.out
 
+$(GOPATH)/bin/golint:
+	go get -u golang.org/x/lint/golint
+
 # run the linter against the codebase
-lint.out: $(SRC)
-	golint ./... | tee lint.out
+lint.out: $(GOPATH)/bin/golint $(SRC)
+	$(GOPATH)/bin/golint ./... | tee lint.out
 
 # clean the generated files
 .PHONY: clean

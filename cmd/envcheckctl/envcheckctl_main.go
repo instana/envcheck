@@ -49,6 +49,7 @@ func LoadInfo(r io.Reader) (*cluster.Info, error) {
 	return &info, err
 }
 
+// ExecDaemon executes the daemon pinger subcommand.
 func ExecDaemon(config EnvcheckConfig) {
 	command, err := cluster.NewCommand(config.Kubeconfig)
 	if err != nil {
@@ -68,6 +69,7 @@ func ExecDaemon(config EnvcheckConfig) {
 	}
 }
 
+// ExecPinger executes the pinger subcommand.
 func ExecPinger(config EnvcheckConfig) {
 	command, err := cluster.NewCommand(config.Kubeconfig)
 	if err != nil {
@@ -88,6 +90,7 @@ func ExecPinger(config EnvcheckConfig) {
 	}
 }
 
+// ExecInspect executes the inspect subcommand.
 func ExecInspect(config EnvcheckConfig) {
 	var info *cluster.Info
 	if config.IsLive() {
@@ -151,6 +154,7 @@ func ExecInspect(config EnvcheckConfig) {
 		size.Heap)
 }
 
+// ExecVersion prints the current revision and go runtime version to the writer.
 func ExecVersion(w io.Writer) {
 	w.Write([]byte(fmt.Sprintf("revision=%s go=%s\n", Revision, runtime.Version())))
 }
@@ -180,6 +184,7 @@ type EnvcheckConfig struct {
 	UseGateway      bool
 }
 
+// IsLive indicates whether the inspect details should be loaded from an API or file.
 func (c *EnvcheckConfig) IsLive() bool {
 	return c.Podfile == ""
 }
@@ -192,9 +197,13 @@ var (
 )
 
 const (
+	// ApplyDaemon is the subcommand flag to indicate the daemon to be executed.
 	ApplyDaemon int = iota
+	// ApplyPinger is the subcommand flag to indicate the pinger to be executed.
 	ApplyPinger
+	// InspectCluster is the subcommand flag to indicate the inspect to be executed.
 	InspectCluster
+	// PrintVersion is the subcommand flag to indicate the version print to be executed.
 	PrintVersion
 )
 
