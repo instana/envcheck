@@ -205,70 +205,89 @@ const (
 	InspectCluster
 	// PrintVersion is the subcommand flag to indicate the version print to be executed.
 	PrintVersion
+	// Profile is the subcommand enum to indicate profiling should be executed.
+	Profile
 )
+
+// New creates a new CmdFlag for capturing sub-command flags and configurations.
+func New(w io.Writer) *CmdFlag {
+	return &CmdFlag{
+		flagSets: make(map[string]*flag.FlagSet),
+		configs:  make(map[string]*EnvcheckConfig),
+		w:        w,
+	}
+}
+
+// CmdFlag is a struct to capture an number of subcommands, config, and their flags.
+type CmdFlag struct {
+	flagSets map[string]*flag.FlagSet
+	configs  map[string]*EnvcheckConfig
+	w        io.Writer
+}
+
+// FlagSet creates a new flagset with the name and associated subCmd enum.
+func (cf *CmdFlag) FlagSet(name string, subCmd int) (*flag.FlagSet, *EnvcheckConfig) {
+	f := flag.NewFlagSet(name, flag.ExitOnError)
+	cfg := &EnvcheckConfig{Subcommand: subCmd}
+	cf.flagSets[name] = f
+	cf.configs[name] = cfg
+	f.SetOutput(cf.w)
+	return f, cfg
+}
+
+// Usage prints the usage for all commands.
+func (cf *CmdFlag) Usage(cmd string) {
+	cf.w.Write([]byte("Usage: " + cmd + " requires a subcommand (rev. " + Revision + ")\n"))
+	for _, v := range cf.flagSets {
+		cf.w.Write([]byte("\n"))
+		v.Usage()
+	}
+	cf.w.Write([]byte("\n"))
+}
+
+// Parse extracts the relevant flag values for the appropriate sub-command.
+func (cf *CmdFlag) Parse(args []string) (*EnvcheckConfig, error) {
+	cmd := args[0]
+	if len(args) < 2 {
+		cf.Usage(cmd)
+		return nil, ErrNoSubcommand
+	}
+
+	subCmd := args[1]
+	p, ok := cf.flagSets[subCmd]
+	if !ok {
+		cf.Usage(cmd)
+		return nil, ErrUnknownSubcommand
+	}
+
+	p.Parse(args[2:])
+	return cf.configs[subCmd], nil
+}
 
 // Parse parses the individual subcommands and returns the related configuration.
 func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error) {
-	var fs []*flag.FlagSet
+	cmdFlags := New(w)
 
-	var daemonConfig = EnvcheckConfig{Subcommand: ApplyDaemon}
-	daemonFlags := flag.NewFlagSet("daemon", flag.ExitOnError)
+	daemonFlags, daemonConfig := cmdFlags.FlagSet("daemon", ApplyDaemon)
 	daemonFlags.StringVar(&daemonConfig.AgentNamespace, "ns", "instana-agent", "daemon namespace")
 	daemonFlags.StringVar(&daemonConfig.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
-	daemonFlags.SetOutput(w)
-	fs = append(fs, daemonFlags)
 
-	var inspectConfig = EnvcheckConfig{Subcommand: InspectCluster}
-	inspectFlags := flag.NewFlagSet("inspect", flag.ExitOnError)
+	inspectFlags, inspectConfig := cmdFlags.FlagSet("inspect", InspectCluster)
 	inspectFlags.StringVar(&inspectConfig.AgentNamespace, "agentns", "instana-agent", "Instana agent namespace")
 	inspectFlags.StringVar(&inspectConfig.Podfile, "podfile", "", "read from podfile instead of live cluster query")
 	inspectFlags.StringVar(&inspectConfig.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
-	inspectFlags.SetOutput(w)
-	fs = append(fs, inspectFlags)
 
-	var pingConfig = EnvcheckConfig{Subcommand: ApplyPinger}
-	pingFlags := flag.NewFlagSet("ping", flag.ExitOnError)
+	pingFlags, pingConfig := cmdFlags.FlagSet("ping", ApplyPinger)
 	pingFlags.StringVar(&pingConfig.PingerHost, "host", "", "override IP or DNS name to ping. defaults to nodeIP if blank")
 	pingFlags.StringVar(&pingConfig.PingerNamespace, "ns", "default", "ping client namespace")
 	pingFlags.StringVar(&pingConfig.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
 	pingFlags.BoolVar(&pingConfig.UseGateway, "use-gateway", false, "use the pods gateway as the host to ping")
-	pingFlags.SetOutput(w)
-	fs = append(fs, pingFlags)
 
-	versionFlags := flag.NewFlagSet("version", flag.ExitOnError)
-	versionFlags.SetOutput(w)
-	fs = append(fs, versionFlags)
+	cmdFlags.FlagSet("profile", Profile)
 
-	if len(args) < 2 {
-		usage(args[0], w, fs)
-		return nil, ErrNoSubcommand
-	}
+	cmdFlags.FlagSet("version", PrintVersion)
 
-	cmdArgs := args[2:]
-	switch args[1] {
-	case "daemon":
-		daemonFlags.Parse(cmdArgs)
-		return &daemonConfig, nil
-	case "inspect":
-		inspectFlags.Parse(cmdArgs)
-		return &inspectConfig, nil
-	case "ping":
-		pingFlags.Parse(cmdArgs)
-		return &pingConfig, nil
-	case "version":
-		return &EnvcheckConfig{Subcommand: PrintVersion}, nil
-	}
-
-	usage(args[0], w, fs)
-	return nil, ErrUnknownSubcommand
-}
-
-func usage(cmd string, w io.Writer, fs []*flag.FlagSet) {
-	w.Write([]byte("Usage: " + cmd + " requires a subcommand (rev. " + Revision + ")\n"))
-	for _, v := range fs {
-		w.Write([]byte("\n"))
-		v.Usage()
-	}
+	return cmdFlags.Parse(args)
 }
 
 func main() {

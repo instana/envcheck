@@ -42,6 +42,7 @@ func Test_parse_flags(t *testing.T) {
 		"inspect offline":    {[]string{"envcheckctl", "inspect", "-podfile=foobar.json"}, &EnvcheckConfig{Subcommand: InspectCluster, AgentNamespace: "instana-agent", Podfile: "foobar.json"}},
 		"ping":               {[]string{"envcheckctl", "ping"}, &EnvcheckConfig{Subcommand: ApplyPinger, PingerNamespace: "default"}},
 		"ping using gateway": {[]string{"envcheckctl", "ping", "-use-gateway"}, &EnvcheckConfig{Subcommand: ApplyPinger, PingerNamespace: "default", UseGateway: true}},
+		"profile":            {[]string{"envcheckctl", "profile"}, &EnvcheckConfig{Subcommand: Profile}},
 		"version":            {[]string{"envcheckctl", "version"}, &EnvcheckConfig{Subcommand: PrintVersion}},
 	}
 	for name, tc := range cases {

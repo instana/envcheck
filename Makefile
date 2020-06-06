@@ -7,7 +7,6 @@ GO_LINUX := GOOS=linux GOARCH=amd64 go
 GO_OSX := GOOS=darwin GOARCH=amd64 go
 GO_WIN64 := GOOS=windows GOARCH=amd64 go
 EXE := envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64 envcheck-pinger envcheck-daemon
-GOPATH := $(shell go env GOPATH)
 
 .PHONY: all
 all: vet lint coverage envcheckctl
