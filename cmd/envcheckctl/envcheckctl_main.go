@@ -236,6 +236,7 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 	fs = append(fs, pingFlags)
 
 	versionFlags := flag.NewFlagSet("version", flag.ExitOnError)
+	versionFlags.SetOutput(w)
 	fs = append(fs, versionFlags)
 
 	if len(args) < 2 {

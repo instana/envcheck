@@ -2,15 +2,21 @@ package main
 
 import (
 	"io/ioutil"
-	"reflect"
+	"log"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/instana/envcheck/cluster"
 )
 
+func init() {
+	log.SetOutput(ioutil.Discard)
+}
+
 func Test_parse_no_subcommand(t *testing.T) {
+	t.Parallel()
 	_, err := Parse([]string{"envcheckctl"}, "", ioutil.Discard)
 	if err != ErrNoSubcommand {
 		t.Errorf("err=%v, want ErrNoSubcommand", err)
@@ -18,6 +24,7 @@ func Test_parse_no_subcommand(t *testing.T) {
 }
 
 func Test_parse_unknown_subcommand(t *testing.T) {
+	t.Parallel()
 	_, err := Parse([]string{"envcheckctl", "foobar"}, "", ioutil.Discard)
 	if err != ErrUnknownSubcommand {
 		t.Errorf("err=%v, want ErrUnknownSubcommand", err)
@@ -44,8 +51,8 @@ func Test_parse_flags(t *testing.T) {
 				t.Errorf("err=%v, want nil", err)
 			}
 
-			if !reflect.DeepEqual(actual, tc.config) {
-				t.Errorf("config=%#v, want %#v", actual, tc.config)
+			if !cmp.Equal(tc.config, actual) {
+				t.Errorf("Parse() mismatch (-want +got)\n%s", cmp.Diff(tc.config, actual))
 			}
 		})
 	}
@@ -76,8 +83,8 @@ func Test_LoadInfo_reads_empty_ClusterInfo(t *testing.T) {
 	}
 
 	expected := &cluster.Info{Name: "https://gke.gcloud.com:8443", Pods: []cluster.PodInfo{}}
-	if !reflect.DeepEqual(info, expected) {
-		t.Errorf("info=%v, want %v", info, expected)
+	if !cmp.Equal(expected, info) {
+		t.Errorf("LoadInfo() mismatch (-want +got)\n%s", cmp.Diff(expected, info))
 	}
 }
 
@@ -91,6 +98,7 @@ func Test_LoadInfo_errors_with_invalid_json(t *testing.T) {
 }
 
 func Test_QueryLive_should_count_pods_correctly(t *testing.T) {
+	t.Parallel()
 	query := &stubQuery{}
 	info, _ := QueryLive(query)
 
@@ -100,6 +108,7 @@ func Test_QueryLive_should_count_pods_correctly(t *testing.T) {
 }
 
 func Test_QueryLive_should_associate_pods_correctly(t *testing.T) {
+	t.Parallel()
 	query := &stubQuery{}
 	info, _ := QueryLive(query)
 

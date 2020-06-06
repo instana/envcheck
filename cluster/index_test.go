@@ -1,9 +1,9 @@
 package cluster_test
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/instana/envcheck/cluster"
 )
 
@@ -51,8 +51,8 @@ func Test_Each_increments_unique_namespaces(t *testing.T) {
 	expected := cluster.Summary{
 		Deployments: 1, Namespaces: 2, Nodes: 1, Pods: 2,
 	}
-	if !reflect.DeepEqual(&actual, &expected) {
-		t.Errorf("summary=%#v, want %#v", actual, expected)
+	if !cmp.Equal(&actual, &expected) {
+		t.Errorf("Summary() mismatch (-want +got)\n%s", cmp.Diff(expected, actual))
 	}
 }
 
@@ -70,8 +70,8 @@ func Test_Each_container_increments_containers(t *testing.T) {
 	expected := cluster.Summary{
 		Containers: 3, Deployments: 1, Namespaces: 1, Nodes: 2, Pods: 2,
 	}
-	if !reflect.DeepEqual(&actual, &expected) {
-		t.Errorf("summary=%#v, want %#v", actual, expected)
+	if !cmp.Equal(&actual, &expected) {
+		t.Errorf("Summary() mismatch (-want +got)\n%s", cmp.Diff(expected, actual))
 	}
 }
 
@@ -97,8 +97,8 @@ func Test_Each_increments_unique_hosts(t *testing.T) {
 	expected := cluster.Summary{
 		Deployments: 1, Namespaces: 1, Nodes: 2, Pods: 2,
 	}
-	if !reflect.DeepEqual(&actual, &expected) {
-		t.Errorf("summary=%#v, want %#v", actual, expected)
+	if !cmp.Equal(&actual, &expected) {
+		t.Errorf("Summary() mismatch (-want +got)\n%s", cmp.Diff(expected, actual))
 	}
 }
 
@@ -120,8 +120,8 @@ func Test_Each_increments_by_owner_type(t *testing.T) {
 			index := cluster.NewIndex()
 			index.Each(tc.pod)
 			actual := index.Summary()
-			if !reflect.DeepEqual(&actual, &tc.summary) {
-				t.Errorf("summary=%#v, want %#v", actual, tc.summary)
+			if !cmp.Equal(&actual, &tc.summary) {
+				t.Errorf("Summary() mismatch (-want +got)\n%s", cmp.Diff(tc.summary, actual))
 			}
 		})
 	}

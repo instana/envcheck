@@ -1,9 +1,9 @@
 package agent_test
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/instana/envcheck/agent"
 	"github.com/instana/envcheck/cluster"
 )
@@ -33,8 +33,8 @@ func Test_should_size_environment_correctly(t *testing.T) {
 				MemoryRequest: tc.MemoryRequest,
 				Heap:          tc.Heap,
 			}
-			if !reflect.DeepEqual(expected, actual) {
-				t.Errorf("got %#v, want %#v", actual, expected)
+			if !cmp.Equal(expected, actual) {
+				t.Errorf("Size(Summary) mismatch (-want +got) \n %s", cmp.Diff(expected, actual))
 			}
 		})
 	}

@@ -1,9 +1,9 @@
 package cluster_test
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/instana/envcheck/cluster"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,7 +49,7 @@ func Test_AllPods(t *testing.T) {
 		Owners:     map[string]string{"uid": "DaemonSet"},
 		Containers: []cluster.ContainerInfo{{Name: "instana-agent", Image: "instana-agent:latest"}},
 	}
-	if !reflect.DeepEqual(&all[0], &expected) {
-		t.Errorf("pod0=%#v, want %#v", all[0], &expected)
+	if !cmp.Equal(&expected, &all[0]) {
+		t.Errorf("AllPods()[0] mismatch (-want +got):\n%s", cmp.Diff(&expected, &all[0]))
 	}
 }
