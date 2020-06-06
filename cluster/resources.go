@@ -32,6 +32,12 @@ func (dc *DaemonConfig) Address() string {
 	return fmt.Sprintf("%s:%d", dc.Host, dc.Port)
 }
 
+const (
+	LabelManagedBy = "app.kubernetes.io/managed-by"
+	LabelName      = "app.kubernetes.io/name"
+	LabelVersion   = "app.kubernetes.io/version"
+)
+
 // Daemon creates the envchecker daemon set resource from the provided DaemonConfig.
 func Daemon(config DaemonConfig) *appsv1.DaemonSet {
 	return &appsv1.DaemonSet{
@@ -42,17 +48,16 @@ func Daemon(config DaemonConfig) *appsv1.DaemonSet {
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app.kubernetes.io/managed-by": ManagedBy,
-					"app.kubernetes.io/name":       DaemonSetName,
-					"app.kubernetes.io/version":    config.Version,
+					LabelName:    DaemonSetName,
+					LabelVersion: config.Version,
 				},
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app.kubernetes.io/managed-by": ManagedBy,
-						"app.kubernetes.io/name":       DaemonSetName,
-						"app.kubernetes.io/version":    config.Version,
+						LabelManagedBy: ManagedBy,
+						LabelName:      DaemonSetName,
+						LabelVersion:   config.Version,
 					},
 				},
 				Spec: v1.PodSpec{
@@ -110,17 +115,16 @@ func Pinger(config PingerConfig) *appsv1.DaemonSet {
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app.kubernetes.io/managed-by": ManagedBy,
-					"app.kubernetes.io/name":       PingerName,
-					"app.kubernetes.io/version":    config.Version,
+					LabelName:    PingerName,
+					LabelVersion: config.Version,
 				},
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app.kubernetes.io/managed-by": ManagedBy,
-						"app.kubernetes.io/name":       PingerName,
-						"app.kubernetes.io/version":    config.Version,
+						LabelManagedBy: ManagedBy,
+						LabelName:      PingerName,
+						LabelVersion:   config.Version,
 					},
 				},
 				Spec: v1.PodSpec{
