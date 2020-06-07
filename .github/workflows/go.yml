@@ -33,7 +33,18 @@ jobs:
     - name: Build
       run: make envcheckctl
 
-    - name: Upload artifacts
+    - name: Upload envcheckctl.exe
       uses: actions/upload-artifact@v2
       with:
-        path: envcheckctl.*
+        name: envcheckctl.exe
+        path: envcheckctl.exe
+    - name: Upload envcheckctl.amd64
+      uses: actions/upload-artifact@v2
+      with:
+        name: envcheckctl.amd64
+        path: envcheckctl.amd64
+    - name: Upload envcheckctl.darwin64
+      uses: actions/upload-artifact@v2
+      with:
+        name: envcheckctl.darwin64
+        path: envcheckctl.darwin64
