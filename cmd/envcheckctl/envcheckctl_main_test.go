@@ -42,7 +42,7 @@ func Test_parse_flags(t *testing.T) {
 		"inspect offline":    {[]string{"envcheckctl", "inspect", "-podfile=foobar.json"}, &EnvcheckConfig{Subcommand: InspectCluster, AgentNamespace: "instana-agent", Podfile: "foobar.json"}},
 		"ping":               {[]string{"envcheckctl", "ping"}, &EnvcheckConfig{Subcommand: ApplyPinger, PingerNamespace: "default"}},
 		"ping using gateway": {[]string{"envcheckctl", "ping", "-use-gateway"}, &EnvcheckConfig{Subcommand: ApplyPinger, PingerNamespace: "default", UseGateway: true}},
-		"profile":            {[]string{"envcheckctl", "profile"}, &EnvcheckConfig{Subcommand: Profile}},
+		"leader":             {[]string{"envcheckctl", "leader"}, &EnvcheckConfig{Subcommand: Leader}},
 		"version":            {[]string{"envcheckctl", "version"}, &EnvcheckConfig{Subcommand: PrintVersion}},
 	}
 	for name, tc := range cases {
@@ -120,6 +120,10 @@ func Test_QueryLive_should_associate_pods_correctly(t *testing.T) {
 
 type stubQuery struct {
 	ts time.Time
+}
+
+func (q *stubQuery) InstanaLeader() (string, error) {
+	return "instana-agent-hcdhs", nil
 }
 
 func (q *stubQuery) Time() time.Time {

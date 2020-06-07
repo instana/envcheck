@@ -2,6 +2,8 @@ package cluster
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -12,6 +14,11 @@ import (
 	// imports all auth methods for kubernetes go client.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
+)
+
+var (
+	ErrLeaderUndefined    = fmt.Errorf("Endpoint found but leader undefined")
+	ErrInvalidLeaseFormat = fmt.Errorf("Invalid lease format")
 )
 
 // New builds a new KubernetesQuery implementation with the given kubeconfig.
@@ -36,6 +43,7 @@ type Query interface {
 	AllPods() ([]PodInfo, error)
 	Host() string
 	Time() time.Time
+	InstanaLeader() (string, error)
 }
 
 // NewQuery allocates and returns a new Query.
@@ -46,7 +54,7 @@ func NewQuery(h string, cs typev1.CoreV1Interface) *KubernetesQuery {
 // KubernetesQuery is a concrete Kubernetes client to query various cluster info.
 type KubernetesQuery struct {
 	host string
-	typev1.CoreV1Interface
+	core typev1.CoreV1Interface
 }
 
 // Time returns the current time.
@@ -59,6 +67,30 @@ func (q *KubernetesQuery) Host() string {
 	return q.host
 }
 
+func (q *KubernetesQuery) InstanaLeader() (string, error) {
+	ep, err := q.core.Endpoints("default").Get(context.TODO(), "instana", metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	v, ok := ep.Annotations["control-plane.alpha.kubernetes.io/leader"]
+	if !ok {
+		return "", ErrLeaderUndefined
+	}
+
+	var lease LeaderLease
+	err = json.Unmarshal([]byte(v), &lease)
+	if err != nil {
+		return "", ErrInvalidLeaseFormat
+	}
+
+	return lease.HolderIdentity, nil
+}
+
+// {"holderIdentity":"instana-agent-hcdhs","leaseDurationSeconds":10,"acquireTime":"2020-06-03T19:54:57Z","renewTime":"2020-06-03T20:04:12Z","leaderTransitions":0}`
+type LeaderLease struct {
+	HolderIdentity string `json:"holderIdentity"`
+}
+
 // AllPods retrieves all pod info from the cluster.
 func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 	var cont string
@@ -66,7 +98,7 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 	namespaces := make(map[string]bool)
 
 	for true {
-		pods, err := q.Pods("").List(context.TODO(), metav1.ListOptions{Limit: 100, Continue: cont})
+		pods, err := q.core.Pods("").List(context.TODO(), metav1.ListOptions{Limit: 100, Continue: cont})
 		if err != nil {
 			return nil, err
 		}
