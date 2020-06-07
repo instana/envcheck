@@ -29,11 +29,21 @@ func ExecLeader(config EnvcheckConfig) {
 		if err != nil {
 			log.Fatalf("error downloading profiler: %v\n", err)
 		}
+		// Upload and unpack file on pod
+		// Exec memory profiler in pod
+		// /tmp/profiler.sh -d ${DURATION} -e alloc -o collapsed -f alloc_profile_${agent_pid} \
+		//      --title Instana_Agent_Memory_Allocation_Profile --minwidth 1 -t ${agent_pid}
+		// Exec cpu profiler in pod
+		// /tmp/profiler.sh -d ${DURATION} -e cpu -o collapsed -f cpu_profile_${agent_pid} \
+		//      --title Instana_Agent_CPU_Profile --minwidth 1 -t -I 'com/instana/*' -X start_thread ${agent_pid}
+		// Exec jmap in pod
+		// jvm/bin/jmap -dump:format=b,file=heap_${agent_pid}.hprof ${agent_pid}
+		// Download the profile
 	}
 }
 
 const (
-	defaultProfilerURL = "https://github.com/jvm-profiling-tools/async-profiler/releases/download/v1.7/async-profiler-1.7-linux-x64.tar.gz"
+	defaultProfilerURL = "https://github.com/jvm-profiling-tools/async-profiler/releases/download/v1.7.1/async-profiler-1.7.1-linux-x64.tar.gz"
 	defaultFilename    = "async-profiler.tgz"
 )
 

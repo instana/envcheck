@@ -18,9 +18,9 @@ import (
 
 var (
 	// ErrLeaderUndefined is returned when the instana endpoint exists but no leader annotation exists.
-	ErrLeaderUndefined = fmt.Errorf("Endpoint found but leader undefined")
+	ErrLeaderUndefined = fmt.Errorf("endpoint found but leader undefined")
 	// ErrInvalidLeaseFormat is returned when the leader annotation does not contain a valid LeaderLease.
-	ErrInvalidLeaseFormat = fmt.Errorf("Invalid lease format")
+	ErrInvalidLeaseFormat = fmt.Errorf("invalid lease format")
 )
 
 // New builds a new KubernetesQuery implementation with the given kubeconfig.
