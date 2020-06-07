@@ -17,7 +17,9 @@ import (
 )
 
 var (
-	ErrLeaderUndefined    = fmt.Errorf("Endpoint found but leader undefined")
+	// ErrLeaderUndefined is returned when the instana endpoint exists but no leader annotation exists.
+	ErrLeaderUndefined = fmt.Errorf("Endpoint found but leader undefined")
+	// ErrInvalidLeaseFormat is returned when the leader annotation does not contain a valid LeaderLease.
 	ErrInvalidLeaseFormat = fmt.Errorf("Invalid lease format")
 )
 
@@ -67,6 +69,7 @@ func (q *KubernetesQuery) Host() string {
 	return q.host
 }
 
+// InstanaLeader returns the instana agent leader pod name.
 func (q *KubernetesQuery) InstanaLeader() (string, error) {
 	ep, err := q.core.Endpoints("default").Get(context.TODO(), "instana", metav1.GetOptions{})
 	if err != nil {
@@ -86,9 +89,10 @@ func (q *KubernetesQuery) InstanaLeader() (string, error) {
 	return lease.HolderIdentity, nil
 }
 
-// {"holderIdentity":"instana-agent-hcdhs","leaseDurationSeconds":10,"acquireTime":"2020-06-03T19:54:57Z","renewTime":"2020-06-03T20:04:12Z","leaderTransitions":0}`
+// LeaderLease is the lease struct for the leader elector sidecar.
 type LeaderLease struct {
 	HolderIdentity string `json:"holderIdentity"`
+	// {"holderIdentity":"instana-agent-hcdhs","leaseDurationSeconds":10,"acquireTime":"2020-06-03T19:54:57Z","renewTime":"2020-06-03T20:04:12Z","leaderTransitions":0}`
 }
 
 // AllPods retrieves all pod info from the cluster.

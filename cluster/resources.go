@@ -18,7 +18,7 @@ const (
 	PingerName = "pinger"
 )
 
-// DaemonConfig is the conffiguration for the envchecker daemon set.
+// DaemonConfig is the configuration for the envchecker daemon set.
 type DaemonConfig struct {
 	Namespace string
 	Image     string
@@ -33,9 +33,12 @@ func (dc *DaemonConfig) Address() string {
 }
 
 const (
+	// LabelManagedBy is the string for the k8s default managed-by key.
 	LabelManagedBy = "app.kubernetes.io/managed-by"
-	LabelName      = "app.kubernetes.io/name"
-	LabelVersion   = "app.kubernetes.io/version"
+	// LabelName is the string for the k8s default name key.
+	LabelName = "app.kubernetes.io/name"
+	// LabelVersion is the string for the k8s default version key.
+	LabelVersion = "app.kubernetes.io/version"
 )
 
 // Daemon creates the envchecker daemon set resource from the provided DaemonConfig.

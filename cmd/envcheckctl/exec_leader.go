@@ -7,6 +7,7 @@ import (
 	"github.com/instana/envcheck/cluster"
 )
 
+// ExecLeader executes the leader subcommand.
 func ExecLeader(config EnvcheckConfig) {
 	query, err := cluster.New(config.Kubeconfig)
 	if err != nil {

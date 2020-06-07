@@ -32,10 +32,10 @@ type CmdFlag struct {
 // FlagSet creates a new flagset with the name and associated subCmd enum.
 func (cf *CmdFlag) FlagSet(name string, subCmd int) (*flag.FlagSet, *EnvcheckConfig) {
 	f := flag.NewFlagSet(name, flag.ContinueOnError)
+	f.SetOutput(cf.w)
 	cfg := &EnvcheckConfig{Subcommand: subCmd}
 	cf.flagSets[name] = f
 	cf.configs[name] = cfg
-	f.SetOutput(cf.w)
 	return f, cfg
 }
 
