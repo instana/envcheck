@@ -37,6 +37,7 @@ const (
 	defaultFilename    = "async-profiler.tgz"
 )
 
+// DownloadFile downloads the file at url to the filename.
 func DownloadFile(url, filename string) error {
 	resp, err := http.Get(url)
 	if err != nil {
