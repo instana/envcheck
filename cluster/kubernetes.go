@@ -143,12 +143,14 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 	return podList, nil
 }
 
+// AgentEvent represents a single K8S event associated with the agent.
 type AgentEvent struct {
 	EventTime time.Time
 	Reason    string
 	Message   string
 }
 
+// AgentInfo provides general information relating to the agent.
 type AgentInfo struct {
 	Available    int32
 	Desired      int32
@@ -158,9 +160,16 @@ type AgentInfo struct {
 	Unavailable  int32
 }
 
+// AgentInfo queries the api-server for details about the Instana agent.
 func (q *KubernetesQuery) AgentInfo(namespace string, name string) (*AgentInfo, error) {
+	ds, err := q.apps.DaemonSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	uid := string(ds.UID)
 	eventInterface := q.core.Events(namespace)
-	selector := eventInterface.GetFieldSelector(&name, &namespace, nil, nil)
+	selector := eventInterface.GetFieldSelector(&name, &namespace, nil, &uid)
 	opts := metav1.ListOptions{
 		FieldSelector: selector.String(),
 	}
@@ -177,11 +186,6 @@ func (q *KubernetesQuery) AgentInfo(namespace string, name string) (*AgentInfo, 
 			Message: v.Message,
 		}
 		events = append(events, event)
-	}
-
-	ds, err := q.apps.DaemonSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
 	}
 
 	info := &AgentInfo{
