@@ -12,7 +12,7 @@ import (
 
 var (
 	// Revision is the Git commit SHA injected at compile time.
-	Revision string = "dev"
+	Revision = "dev"
 )
 
 // ExecVersion prints the current revision and go runtime version to the writer.
@@ -23,6 +23,8 @@ func ExecVersion(w io.Writer) {
 // Exec is the primary execution for the envcheckctl application.
 func Exec(config EnvcheckConfig) {
 	switch config.Subcommand {
+	case Agent:
+		ExecAgent(config)
 	case ApplyDaemon:
 		ExecDaemon(config)
 	case ApplyPinger:
@@ -39,6 +41,7 @@ func Exec(config EnvcheckConfig) {
 // EnvcheckConfig is the primary configuration parameters that control this exe.
 type EnvcheckConfig struct {
 	AgentNamespace  string
+	AgentName       string
 	Kubeconfig      string
 	PingerHost      string
 	PingerNamespace string
@@ -54,8 +57,10 @@ func (c *EnvcheckConfig) IsLive() bool {
 }
 
 const (
+	// Agent is the subcommand flag to indicate the agent debug to be executed.
+	Agent int = iota
 	// ApplyDaemon is the subcommand flag to indicate the daemon to be executed.
-	ApplyDaemon int = iota
+	ApplyDaemon
 	// ApplyPinger is the subcommand flag to indicate the pinger to be executed.
 	ApplyPinger
 	// InspectCluster is the subcommand flag to indicate the inspect to be executed.
@@ -70,13 +75,13 @@ const (
 func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error) {
 	cmdFlags := New(w)
 
-	flags, config := cmdFlags.FlagSet("daemon", ApplyDaemon)
-	flags.StringVar(&config.AgentNamespace, "ns", "instana-agent", "daemon namespace")
+	flags, config := cmdFlags.FlagSet("agent", Agent)
+	flags.StringVar(&config.AgentNamespace, "ns", "instana-agent", "agent namespace")
+	flags.StringVar(&config.AgentName, "name", "instana-agent", "agent daemonset name")
 	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
 
-	flags, config = cmdFlags.FlagSet("inspect", InspectCluster)
-	flags.StringVar(&config.AgentNamespace, "agentns", "instana-agent", "Instana agent namespace")
-	flags.StringVar(&config.Podfile, "podfile", "", "read from podfile instead of live cluster query")
+	flags, config = cmdFlags.FlagSet("daemon", ApplyDaemon)
+	flags.StringVar(&config.AgentNamespace, "ns", "instana-agent", "daemon namespace")
 	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
 
 	flags, config = cmdFlags.FlagSet("ping", ApplyPinger)
@@ -84,6 +89,11 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 	flags.StringVar(&config.PingerNamespace, "ns", "default", "ping client namespace")
 	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
 	flags.BoolVar(&config.UseGateway, "use-gateway", false, "use the pods gateway as the host to ping")
+
+	flags, config = cmdFlags.FlagSet("inspect", InspectCluster)
+	flags.StringVar(&config.AgentNamespace, "agentns", "instana-agent", "Instana agent namespace")
+	flags.StringVar(&config.Podfile, "podfile", "", "read from podfile instead of live cluster query")
+	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
 
 	flags, config = cmdFlags.FlagSet("leader", Leader)
 	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")

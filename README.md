@@ -25,17 +25,20 @@ Current Capabilities
    network.
  * **envcheckctl** - Pull a dump of all pods in the cluster .
  * **envcheckctl** - Add agent memory sizing guide for a K8S cluster.
+ * **envcheckctl** - Find k8s leader.
 
 Future Capabilities
 -------------------
 
- * Find k8s leader.
- * Inject a profiler into a pod.
- * Add instana-agent config map to the JSON dump.
- * Check access to backend from all daemonsets.
- * Check API permissions.
- * Aggregate and collect all metrics with a coordinator.
- * Report presence of service meshes and CNI details.
+ * [x] Find k8s leader.
+ * [ ] Inject a profiler into a pod.
+ * [ ] Add instana-agent config map to the JSON dump.
+ * [ ] Check access to backend from all daemonsets.
+ * [ ] Check API permissions.
+ * [ ] Aggregate and collect all metrics with a coordinator.
+ * [ ] Report presence of service meshes and CNI details.
+ * [ ] Check for presence of Pod Security Policy.
+ * [x] Check for events on instana-agent DaemonSet.
 
 Install Requirements
 --------------------

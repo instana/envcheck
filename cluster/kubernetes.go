@@ -9,6 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	appv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	typev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	// imports all auth methods for kubernetes go client.
@@ -36,7 +37,7 @@ func New(kubeconfig string) (*KubernetesQuery, error) {
 		return nil, err
 	}
 
-	return NewQuery(config.Host, clientset.CoreV1()), nil
+	return NewQuery(config.Host, clientset.CoreV1(), clientset.AppsV1()), nil
 }
 
 // Query is a query interface for the cluster.
@@ -49,14 +50,15 @@ type Query interface {
 }
 
 // NewQuery allocates and returns a new Query.
-func NewQuery(h string, cs typev1.CoreV1Interface) *KubernetesQuery {
-	return &KubernetesQuery{h, cs}
+func NewQuery(h string, cs typev1.CoreV1Interface, apps appv1.AppsV1Interface) *KubernetesQuery {
+	return &KubernetesQuery{h, cs, apps}
 }
 
 // KubernetesQuery is a concrete Kubernetes client to query various cluster info.
 type KubernetesQuery struct {
 	host string
 	core typev1.CoreV1Interface
+	apps appv1.AppsV1Interface
 }
 
 // Time returns the current time.
@@ -139,4 +141,56 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 	}
 
 	return podList, nil
+}
+
+type AgentEvent struct {
+	EventTime time.Time
+	Reason    string
+	Message   string
+}
+
+type AgentInfo struct {
+	Available    int32
+	Desired      int32
+	EventList    []AgentEvent
+	Misscheduled int32
+	Ready        int32
+	Unavailable  int32
+}
+
+func (q *KubernetesQuery) AgentInfo(namespace string, name string) (*AgentInfo, error) {
+	eventInterface := q.core.Events(namespace)
+	selector := eventInterface.GetFieldSelector(&name, &namespace, nil, nil)
+	opts := metav1.ListOptions{
+		FieldSelector: selector.String(),
+	}
+	list, err := eventInterface.List(context.TODO(), opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var events []AgentEvent
+	for _, v := range list.Items {
+		var event = AgentEvent{
+			EventTime: v.EventTime.Time,
+			Reason: v.Reason,
+			Message: v.Message,
+		}
+		events = append(events, event)
+	}
+
+	ds, err := q.apps.DaemonSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	info := &AgentInfo{
+		Available: ds.Status.NumberAvailable,
+		Desired: ds.Status.DesiredNumberScheduled,
+		EventList: events,
+		Misscheduled: ds.Status.NumberMisscheduled,
+		Ready: ds.Status.NumberReady,
+		Unavailable: ds.Status.NumberUnavailable,
+	}
+	return info, nil
 }
