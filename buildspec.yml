@@ -8,7 +8,7 @@ phases:
   install:
     runtime-versions:
       golang: 1.16
-      docker: 19
+        #      docker: 19
     commands:
       - docker login --username $DOCKER_USER --password $DOCKER_PASSWORD
       - make deps
