@@ -6,13 +6,13 @@ GIT_SHA := $(shell git rev-parse --short HEAD)
 GO_LINUX := GOOS=linux GOARCH=amd64 go
 GO_OSX := GOOS=darwin GOARCH=amd64 go
 GO_WIN64 := GOOS=windows GOARCH=amd64 go
-EXE := envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64 envcheck-pinger envcheck-daemon
+EXE := envcheckctl.amd64 envcheckctl.exe envcheckctl.darwin64 envcheck-pinger envcheck-daemon repocheck
 
 .PHONY: all
 all: vet lint coverage envcheckctl
 
 .PHONY: publish
-publish: docker-envcheck-daemon docker-envcheck-pinger
+publish: push-envcheck-daemon push-envcheck-pinger push-repocheck
 
 .PHONY: test
 test: cover.out
@@ -48,8 +48,11 @@ envcheck-pinger: $(SRC)
 envcheck-daemon: $(SRC)
 	$(GO_LINUX) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/daemon
 
+repocheck: $(SRC)
+	$(GO_LINUX) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/repocheck
+
 .PHONY: docker
-docker: docker-envcheck-daemon docker-envcheck-pinger
+docker: docker-envcheck-daemon docker-envcheck-pinger docker-repocheck
 
 .PHONY: docker-envcheck-daemon
 docker-envcheck-daemon: envcheck-daemon
@@ -68,6 +71,15 @@ docker-envcheck-pinger: envcheck-pinger
 push-envcheck-pinger: docker-envcheck-pinger
 	docker push $(DOCKER_REPO)/envcheck-pinger:${GIT_SHA}
 	docker push $(DOCKER_REPO)/envcheck-pinger:latest
+
+.PHONY: docker-repocheck
+docker-repocheck: repocheck
+	docker build . -t $(DOCKER_REPO)/envcheck-repocheck:latest -t $(DOCKER_REPO)/envcheck-repocheck:${GIT_SHA} --build-arg CMD_PATH=./repocheck
+
+.PHONY: push-repocheck
+push-repocheck: docker-repocheck
+	docker push $(DOCKER_REPO)/envcheck-repocheck:${GIT_SHA}
+	docker push $(DOCKER_REPO)/envcheck-repocheck:latest
 
 # run the tests with atomic coverage
 cover.out: $(SRC)
@@ -94,4 +106,3 @@ lint.out: $(SRC)
 clean:
 	rm -f *.out $(EXE)
 	go clean -i ./...
-	
