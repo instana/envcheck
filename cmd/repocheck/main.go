@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Version is the sha version for this application.
 var Version = "dev"
 
 func main() {

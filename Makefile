@@ -31,7 +31,7 @@ envcheckctl: $(EXE)
 
 .PHONY: deps
 deps:
-	go get -u golang.org/x/lint/golint
+	go install golang.org/x/lint/golint@latest
 
 envcheckctl.exe: $(SRC)
 	$(GO_WIN64) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/envcheckctl
@@ -105,4 +105,4 @@ lint.out: $(SRC)
 .PHONY: clean
 clean:
 	rm -f *.out $(EXE)
-	go clean -i ./...
+	go clean -i
