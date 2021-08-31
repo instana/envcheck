@@ -1,8 +1,8 @@
 version: 0.2
 env:
   parameter-store:
-    DOCKER_USER: "hub.docker.com.user"
-    DOCKER_PASSWORD: "hub.docker.com.password"
+    DOCKER_USER: "docker.instanacicd.user"
+    DOCKER_PASSWORD: "docker.instanacicd.password"
 
 phases:
   install:
