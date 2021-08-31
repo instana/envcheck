@@ -60,30 +60,52 @@ func main() {
 	ticker := time.NewTicker(*tickRate)
 
 	for t := range ticker.C {
+		var secondaryFail int
+		var primaryFail int
+
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			resp, err := http.Get(*secondaryURL)
+			if err != nil || resp.StatusCode != 200 {
+				var code = -1
+				if err == nil {
+					code = resp.StatusCode
+				}
+				log.Printf("get=failed status=%d host=%s requested=%v err=`%v`\n", code, *secondaryURL, t, err)
+				secondaryFail = 1
+			}
+			wg.Done()
+		}()
+
+		go func() {
+			resp, err := http.Get(artifactURL)
+			if err != nil || resp.StatusCode != 200 {
+				var code = -1
+				if err == nil {
+					code = resp.StatusCode
+				}
+				log.Printf("get=failed status=%d host=artifact-public.instana.io requested=%v err=`%v`\n", code, t, err)
+				primaryFail = 1
+			}
+			wg.Done()
+		}()
+
+		wg.Wait()
+
 		lock.Lock()
+		url := *secondaryURL
+		v := shortAccum.Failures[url]
+		shortAccum.Failures[url] = v + secondaryFail
+		longAccum.Failures[url] = v + secondaryFail
+
+		url = "artifact-public.instana.io"
+		v = shortAccum.Failures[url]
+		shortAccum.Failures[url] = v + primaryFail
+		longAccum.Failures[url] = v + primaryFail
+
 		shortAccum.Count++
 		longAccum.Count++
-		resp, err := http.Get(*secondaryURL)
-		if err != nil || resp.StatusCode != 200 {
-			log.Printf("get=failed host=%s requested=%v err=`%v`\n", *secondaryURL, t, err)
-			url := *secondaryURL
-			v := shortAccum.Failures[url]
-			shortAccum.Failures[url] = v + 1
-			longAccum.Failures[url] = v + 1
-		}
-
-		resp, err = http.Get(artifactURL)
-		if err != nil || resp.StatusCode != 200 {
-			var code = -1
-			if err == nil {
-				code = resp.StatusCode
-			}
-			log.Printf("get=failed status=%d host=artifact-public.instana.io requested=%v err=`%v`\n", code, t, err)
-			url := "artifact-public.instana.io"
-			v := shortAccum.Failures[url]
-			shortAccum.Failures[url] = v + 1
-			longAccum.Failures[url] = v + 1
-		}
 		lock.Unlock()
 	}
 }
@@ -92,7 +114,11 @@ func resetAccumulator(ch <-chan time.Time, data *Accumulator, lock *sync.Mutex) 
 	for t := range ch {
 		lock.Lock()
 		for k, v := range data.Failures {
-			log.Printf("host=%s failures=%v/%v(%v%%) end=%v period=%v\n", k, v, data.Count, (v / data.Count * 100.0), t, data.Period)
+			percentage := 0
+			if data.Count > 0 {
+				percentage = v / data.Count * 100.0
+			}
+			log.Printf("host=%s failures=%v/%v(%v%%) end=%v period=%v\n", k, v, data.Count, percentage, t, data.Period)
 			data.Failures[k] = 0
 		}
 		data.Count = 0
