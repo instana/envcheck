@@ -99,7 +99,7 @@ vet.out: $(SRC)
 
 # run the linter against the codebase
 lint.out: $(SRC)
-	$(shell go list -f {{.Target}} golang.org/x/lint/golint) ./... | tee lint.out
+	golint ./... | tee lint.out
 
 # clean the generated files
 .PHONY: clean
