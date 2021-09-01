@@ -118,7 +118,7 @@ func resetAccumulator(ch <-chan time.Time, data *Accumulator, lock *sync.Mutex) 
 			if data.Count > 0 {
 				percentage = v / data.Count * 100.0
 			}
-			log.Printf("host=%s failures=%v/%v(%v%%) end=%v period=%v\n", k, v, data.Count, percentage, t, data.Period)
+			log.Printf("period=%v failures=%v/%v(%v%%) host=%s end=%v \n", data.Period, v, data.Count, percentage, k, t)
 			data.Failures[k] = 0
 		}
 		data.Count = 0
