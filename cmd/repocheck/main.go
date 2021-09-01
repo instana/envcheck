@@ -13,6 +13,7 @@ import (
 // Version is the sha version for this application.
 var Version = "dev"
 
+// Accumulator is used to capture a given time periods failure and total request count.
 type Accumulator struct {
 	Failures map[string]int
 	Count    int

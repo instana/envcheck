@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/static-debian10
+FROM gcr.io/distroless/base-debian11
 
 ARG CMD_PATH
 
