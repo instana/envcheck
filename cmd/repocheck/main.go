@@ -32,7 +32,7 @@ func main() {
 	longReset := flag.Duration("long", 24*time.Hour, "long reset period")
 
 	flag.Parse()
-	log.SetFlags(log.LUTC | log.Lshortfile)
+	log.SetFlags(log.LUTC | log.Lshortfile | log.LstdFlags)
 	log.Printf("app=repocheck@%s key=%s tick=%v short=%v long=%v\n", Version, *agentKey, *tickRate, *shortReset, *longReset)
 
 	if *agentKey == "" {
