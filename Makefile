@@ -48,7 +48,7 @@ envcheck-pinger: $(SRC)
 envcheck-daemon: $(SRC)
 	$(GO_LINUX) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/daemon
 
-repocheck: $(SRC)
+envcheck-repocheck: $(SRC)
 	$(GO_LINUX) build -v -ldflags "-X main.Revision=$(GIT_SHA)" -o $@ ./cmd/repocheck
 
 .PHONY: docker
@@ -73,8 +73,8 @@ push-envcheck-pinger: docker-envcheck-pinger
 	docker push $(DOCKER_REPO)/envcheck-pinger:latest
 
 .PHONY: docker-repocheck
-docker-repocheck: repocheck
-	docker build . -t $(DOCKER_REPO)/envcheck-repocheck:latest -t $(DOCKER_REPO)/envcheck-repocheck:${GIT_SHA} --build-arg CMD_PATH=./repocheck
+docker-repocheck: envcheck-repocheck
+	docker build . -t $(DOCKER_REPO)/envcheck-repocheck:latest -t $(DOCKER_REPO)/envcheck-repocheck:${GIT_SHA} --build-arg CMD_PATH=./envcheck-repocheck
 
 .PHONY: push-repocheck
 push-repocheck: docker-repocheck
