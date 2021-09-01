@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// Version is the sha version for this application.
-var Version = "dev"
+// Revision is the sha version for this application.
+var Revision = "dev"
 
 // Accumulator is used to capture a given time periods failure and total request count.
 type Accumulator struct {
@@ -33,7 +33,7 @@ func main() {
 
 	flag.Parse()
 	log.SetFlags(log.LUTC | log.Lshortfile | log.LstdFlags)
-	log.Printf("app=repocheck@%s key=%s tick=%v short=%v long=%v\n", Version, *agentKey, *tickRate, *shortReset, *longReset)
+	log.Printf("app=repocheck@%s key=%s tick=%v short=%v long=%v\n", Revision, *agentKey, *tickRate, *shortReset, *longReset)
 
 	if *agentKey == "" {
 		log.Fatalln("err=`agent key is required, none specified`")

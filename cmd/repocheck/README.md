@@ -23,13 +23,18 @@ Given the scenarios above the following assumptions could be made:
 
 ### Setup
 
-Initialise the namespace and secret.
-
+Initialise the namespace and secret if instana-agent not installed:
 ```
 # create namespace
 kubectl create ns instana-agent
 # create the secret
 kubectl create secret generic -n instana-agent instana-agent --from-literal=key=$INSTANA_AGENT_KEY
+```
+
+Deploy the repo check pod.
+
+```
+
 # create deployment
 cat <<EOF | kubectl apply -f - 
 ---
