@@ -98,12 +98,14 @@ func main() {
 		url := *secondaryURL
 		v := shortAccum.Failures[url]
 		shortAccum.Failures[url] = v + secondaryFail
-		longAccum.Failures[url] = v + secondaryFail
+		lv := longAccum.Failures[url]
+		longAccum.Failures[url] = lv + secondaryFail
 
 		url = "artifact-public.instana.io"
 		v = shortAccum.Failures[url]
 		shortAccum.Failures[url] = v + primaryFail
-		longAccum.Failures[url] = v + primaryFail
+		lv = longAccum.Failures[url]
+		longAccum.Failures[url] = lv + primaryFail
 
 		shortAccum.Count++
 		longAccum.Count++
@@ -115,9 +117,9 @@ func resetAccumulator(ch <-chan time.Time, data *Accumulator, lock *sync.Mutex) 
 	for t := range ch {
 		lock.Lock()
 		for k, v := range data.Failures {
-			percentage := 0
+			var percentage float64 = 0.0
 			if data.Count > 0 {
-				percentage = v / data.Count * 100.0
+				percentage = float64(v) / float64(data.Count) * 100.0
 			}
 			log.Printf("period=%v failures=%v/%v(%v%%) host=%s end=%v \n", data.Period, v, data.Count, percentage, k, t)
 			data.Failures[k] = 0
