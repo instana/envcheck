@@ -32,48 +32,15 @@ kubectl create ns instana-agent
 kubectl create secret generic -n instana-agent instana-agent --from-literal=key=$INSTANA_AGENT_KEY
 ```
 
+
+
 ### Deployment
 
 Deploy the repo check pod.
 
 ```
-
 # create deployment
-cat <<EOF | kubectl apply -f - 
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: repocheck
-  namespace: instana-agent
-  labels:
-    app: repocheck
-spec:
-  selector:
-    matchLabels:
-      app: repocheck
-  template:
-    metadata:
-      labels:
-        app: repocheck
-    spec:
-      dnsPolicy: ClusterFirstWithHostNet
-      serviceAccount: instana-agent
-      containers:
-      - name: repocheck
-        image: instana/envcheck-repocheck:latest
-        command: ["/app", "-tick=5s", "-short=1m", "-long=5m"]
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: INSTANA_AGENT_KEY
-          valueFrom:
-            secretKeyRef:
-              name: instana-agent
-              key: key
-EOF
+kc apply -f https://raw.githubusercontent.com/instana/envcheck/master/cmd/repocheck/deployment.yaml
 
 # check the pod status
 kubectl get pods -n instana-agent
@@ -88,44 +55,8 @@ kubectl logs -n instana-agent -l app=repocheck --tail=1000
 Deploy the repocheck pod as a DaemonSet:
 
 ```
-
 # create deployment
-cat <<EOF | kubectl apply -f - 
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: repocheck
-  namespace: instana-agent
-  labels:
-    app: repocheck
-spec:
-  selector:
-    matchLabels:
-      app: repocheck
-  template:
-    metadata:
-      labels:
-        app: repocheck
-    spec:
-      dnsPolicy: ClusterFirstWithHostNet
-      hostNetwork: true
-      serviceAccount: instana-agent
-      containers:
-      - name: repocheck
-        image: instana/envcheck-repocheck:latest
-        command: ["/app", "-tick=5s", "-short=1m", "-long=5m"]
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: INSTANA_AGENT_KEY
-          valueFrom:
-            secretKeyRef:
-              name: instana-agent
-              key: key
-EOF
+kc apply -f https://raw.githubusercontent.com/instana/envcheck/master/cmd/repocheck/daemonset.yaml
 
 # check the pod status
 kubectl get pods -n instana-agent
