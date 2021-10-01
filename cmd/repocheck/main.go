@@ -27,13 +27,14 @@ func main() {
 
 	secondaryURL := flag.String("secondary", "https://www.google.com", "secondary check url")
 	agentKey := flag.String("key", os.Getenv("INSTANA_AGENT_KEY"), "instana agent key")
+	podName := flag.String("name", os.Getenv("POD_NAME"), "pod name from downward API")
 	tickRate := flag.Duration("tick", 1*time.Minute, "tick duration")
 	shortReset := flag.Duration("short", 1*time.Hour, "short reset period")
 	longReset := flag.Duration("long", 24*time.Hour, "long reset period")
 
 	flag.Parse()
 	log.SetFlags(log.LUTC | log.Lshortfile | log.LstdFlags)
-	log.Printf("app=repocheck@%s key=%s tick=%v short=%v long=%v\n", Revision, *agentKey, *tickRate, *shortReset, *longReset)
+	log.Printf("name=%s app=repocheck@%s key=%s tick=%v short=%v long=%v\n", *podName, Revision, *agentKey, *tickRate, *shortReset, *longReset)
 
 	if *agentKey == "" {
 		log.Fatalln("err=`agent key is required, none specified`")
@@ -54,8 +55,8 @@ func main() {
 	longAccum.Failures[*secondaryURL] = 0
 	longAccum.Failures[url] = 0
 
-	go resetAccumulator(shortTicker.C, &shortAccum, &lock)
-	go resetAccumulator(longTicker.C, &longAccum, &lock)
+	go resetAccumulator(shortTicker.C, *podName, &shortAccum, &lock)
+	go resetAccumulator(longTicker.C, *podName, &longAccum, &lock)
 
 	artifactURL := fmt.Sprintf("https://_:%s@artifact-public.instana.io/artifactory/features-public/com/instana/agent-feature/1.0.0-SNAPSHOT/agent-feature-1.0.0-20180125.135714-873-features.xml", *agentKey)
 	ticker := time.NewTicker(*tickRate)
@@ -73,7 +74,7 @@ func main() {
 				if err == nil {
 					code = resp.StatusCode
 				}
-				log.Printf("get=failed status=%d host=%s requested=%v err=`%v`\n", code, *secondaryURL, t, err)
+				log.Printf("name=%s get=failed status=%d host=%s requested=%v err=`%v`\n", *podName, code, *secondaryURL, t, err)
 				secondaryFail = 1
 			}
 			wg.Done()
@@ -86,7 +87,7 @@ func main() {
 				if err == nil {
 					code = resp.StatusCode
 				}
-				log.Printf("get=failed status=%d host=artifact-public.instana.io requested=%v err=`%v`\n", code, t, err)
+				log.Printf("name=%s get=failed status=%d host=artifact-public.instana.io requested=%v err=`%v`\n", *podName, code, t, err)
 				primaryFail = 1
 			}
 			wg.Done()
@@ -113,7 +114,7 @@ func main() {
 	}
 }
 
-func resetAccumulator(ch <-chan time.Time, data *Accumulator, lock *sync.Mutex) {
+func resetAccumulator(ch <-chan time.Time, name string, data *Accumulator, lock *sync.Mutex) {
 	for t := range ch {
 		lock.Lock()
 		for k, v := range data.Failures {
@@ -121,7 +122,7 @@ func resetAccumulator(ch <-chan time.Time, data *Accumulator, lock *sync.Mutex) 
 			if data.Count > 0 {
 				percentage = float64(v) / float64(data.Count) * 100.0
 			}
-			log.Printf("period=%v failures=%v/%v(%v%%) host=%s end=%v \n", data.Period, v, data.Count, percentage, k, t)
+			log.Printf("name=%s period=%v failures=%v/%v(%v%%) host=%s end=%v \n", name, data.Period, v, data.Count, percentage, k, t)
 			data.Failures[k] = 0
 		}
 		data.Count = 0

@@ -21,7 +21,7 @@ Given the above scenarios the following inferences can be made:
   2. If errors occur only with the primary then it points to an issue outside customers estate.
   3. If errors occure with both URL's it's likely an issue inside the customers estate.
 
-### Setup
+### Initial Setup
 
 Initialise the namespace and secret, if the instana-agent is not installed:
 
@@ -31,6 +31,8 @@ kubectl create ns instana-agent
 # create the secret
 kubectl create secret generic -n instana-agent instana-agent --from-literal=key=$INSTANA_AGENT_KEY
 ```
+
+### Deployment
 
 Deploy the repo check pod.
 
@@ -55,10 +57,17 @@ spec:
       labels:
         app: repocheck
     spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: instana-agent
       containers:
       - name: repocheck
         image: instana/envcheck-repocheck:latest
+        command: ["/app", "-tick=5s", "-short=1m", "-long=5m"]
         env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         - name: INSTANA_AGENT_KEY
           valueFrom:
             secretKeyRef:
@@ -72,7 +81,59 @@ kubectl get pods -n instana-agent
 kubectl logs -n instana-agent -l app=repocheck --tail=1000
 ```
 
-### Expected log output
+
+
+### DaemonSet
+
+Deploy the repocheck pod as a DaemonSet:
+
+```
+
+# create deployment
+cat <<EOF | kubectl apply -f - 
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: repocheck
+  namespace: instana-agent
+  labels:
+    app: repocheck
+spec:
+  selector:
+    matchLabels:
+      app: repocheck
+  template:
+    metadata:
+      labels:
+        app: repocheck
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      serviceAccount: instana-agent
+      containers:
+      - name: repocheck
+        image: instana/envcheck-repocheck:latest
+        command: ["/app", "-tick=5s", "-short=1m", "-long=5m"]
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: INSTANA_AGENT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: instana-agent
+              key: key
+EOF
+
+# check the pod status
+kubectl get pods -n instana-agent
+# check the logs
+kubectl logs -n instana-agent -l app=repocheck --tail=1000
+```
+
+### Expected Log Output
 
 Below is an example output using a faster request rate (every second) and shorter evaluation windows of 15s and 1m:
 

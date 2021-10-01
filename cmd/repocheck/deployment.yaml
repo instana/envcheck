@@ -1,0 +1,33 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: repocheck
+  namespace: instana-agent
+  labels:
+    app: repocheck
+spec:
+  selector:
+    matchLabels:
+      app: repocheck
+  template:
+    metadata:
+      labels:
+        app: repocheck
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: instana-agent
+      containers:
+        - name: repocheck
+          image: instana/envcheck-repocheck:latest
+          command: ["/app", "-tick=5s", "-short=1m", "-long=5m"]
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: INSTANA_AGENT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: instana-agent
+                  key: key
