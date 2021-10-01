@@ -40,7 +40,7 @@ Deploy the repo check pod.
 
 ```
 # create deployment
-kc apply -f https://raw.githubusercontent.com/instana/envcheck/master/cmd/repocheck/deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/instana/envcheck/master/cmd/repocheck/deployment.yaml
 
 # check the pod status
 kubectl get pods -n instana-agent
@@ -56,7 +56,7 @@ Deploy the repocheck pod as a DaemonSet:
 
 ```
 # create deployment
-kc apply -f https://raw.githubusercontent.com/instana/envcheck/master/cmd/repocheck/daemonset.yaml
+kubectl apply -f https://raw.githubusercontent.com/instana/envcheck/master/cmd/repocheck/daemonset.yaml
 
 # check the pod status
 kubectl get pods -n instana-agent
