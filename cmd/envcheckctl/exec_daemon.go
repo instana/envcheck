@@ -20,7 +20,13 @@ func ExecDaemon(config EnvcheckConfig) {
 		Version:   Revision,
 	}
 	err = command.CreateDaemon(dc)
+
 	if err != nil {
 		log.Fatalf("createDaemon=failed err='%v'\n", err)
+	}
+
+	err = command.CreateService(dc)
+	if err != nil {
+		log.Fatalf("createService=failed err='%v'\n", err)
 	}
 }

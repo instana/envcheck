@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -41,6 +42,36 @@ const (
 	LabelVersion = "app.kubernetes.io/version"
 )
 
+var Local = v1.ServiceInternalTrafficPolicyLocal
+
+func Service(config DaemonConfig) *v1.Service {
+	return &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      DaemonSetName,
+			Namespace: config.Namespace,
+			Labels: map[string]string{
+				LabelManagedBy: ManagedBy,
+				LabelName:      DaemonSetName,
+				LabelVersion:   config.Version,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Selector: map[string]string{
+				LabelName: DaemonSetName,
+			},
+			InternalTrafficPolicy: &Local,
+			Ports: []v1.ServicePort{
+				{
+					Name:       "http",
+					Protocol:   v1.ProtocolTCP,
+					TargetPort: intstr.FromString("http"),
+					Port:       config.Port,
+				},
+			},
+		},
+	}
+}
+
 // Daemon creates the envchecker daemon set resource from the provided DaemonConfig.
 func Daemon(config DaemonConfig) *appsv1.DaemonSet {
 	return &appsv1.DaemonSet{
@@ -51,8 +82,7 @@ func Daemon(config DaemonConfig) *appsv1.DaemonSet {
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					LabelName:    DaemonSetName,
-					LabelVersion: config.Version,
+					LabelName: DaemonSetName,
 				},
 			},
 			Template: v1.PodTemplateSpec{
