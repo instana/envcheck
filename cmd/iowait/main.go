@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/instana/iowait/procfs"
+	"github.com/instana/envcheck/procfs"
 	"log"
 	"strconv"
 	"time"

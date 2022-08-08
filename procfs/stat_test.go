@@ -2,7 +2,7 @@ package procfs_test
 
 import (
 	"bufio"
-	. "github.com/instana/iowait/procfs"
+	. "github.com/instana/envcheck/procfs"
 	"os"
 	"path"
 	"strings"
