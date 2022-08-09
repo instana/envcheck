@@ -1,3 +1,32 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: iowait
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: iowait
+rules:
+- apiGroups: ["security.openshift.io"]
+  resourceNames: ["privileged"]
+  resources: ["securitycontextconstraints"]
+  verbs: ["use"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: iowait
+subjects:
+- kind: ServiceAccount
+  name: iowait
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: iowait
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -11,6 +40,7 @@ spec:
       labels:
         name: iowait
     spec:
+      serviceAccountName: iowait
       containers:
       - image: nfinstana/iowait
         name: iowait
