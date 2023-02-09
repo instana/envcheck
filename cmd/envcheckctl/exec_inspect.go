@@ -58,12 +58,13 @@ func ExecInspect(config EnvcheckConfig) {
 	info.Apply(index)
 	summary := index.Summary()
 
-	log.Printf("pods=%d, running=%d, nodes=%d, containers=%d, namespaces=%d, deployments=%d, daemonsets=%d, statefulsets=%d, duration=%v\n",
+	log.Printf("pods=%d, running=%d, nodes=%d, containers=%d, namespaces=%d, deployments=%d, replicaSets=%d, daemonsets=%d, statefulsets=%d, duration=%v\n",
 		summary.Pods,
 		summary.Running,
 		summary.Nodes,
 		summary.Containers,
 		summary.Namespaces,
+		summary.Deployments,
 		summary.Deployments,
 		summary.DaemonSets,
 		summary.StatefulSets,
