@@ -4,26 +4,35 @@ import (
 	"time"
 )
 
-// PodApplyable is the interface to receive pod info from a pod collection.
-type PodApplyable interface {
-	Each(PodInfo)
+// Applyable is the interface to receive pod info from a pod collection.
+type Applyable interface {
+	EachPod(PodInfo)
+	EachNode(NodeInfo)
 }
 
 // Info is a data structure for relevant cluster data.
 type Info struct {
-	Name     string
-	PodCount int
-	Pods     []PodInfo
-	Version  string
-	Started  time.Time
-	Finished time.Time
+	Name      string
+	NodeCount int
+	Nodes     []NodeInfo
+	PodCount  int
+	Pods      []PodInfo
+	Version   string
+	Started   time.Time
+	Finished  time.Time
 }
 
 // Apply iterates over each pod and yields it to the list of applyables.
-func (info *Info) Apply(applyable ...PodApplyable) {
+func (info *Info) Apply(applyable ...Applyable) {
 	for _, pod := range info.Pods {
 		for _, a := range applyable {
-			a.Each(pod)
+			a.EachPod(pod)
+		}
+	}
+
+	for _, node := range info.Nodes {
+		for _, a := range applyable {
+			a.EachNode(node)
 		}
 	}
 }

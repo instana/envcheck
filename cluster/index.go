@@ -3,32 +3,49 @@ package cluster
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // NewIndex builds a new empty index for PodInfo.
 func NewIndex() *Index {
 	return &Index{
-		Containers:   make(Set),
-		DaemonSets:   make(Set),
-		Deployments:  make(Set),
-		Namespaces:   make(Set),
-		Nodes:        make(Set),
-		Pods:         make(Set),
-		Running:      make(Set),
-		StatefulSets: make(Set),
+		CNIPlugins:        make(Counter),
+		Containers:        make(Set),
+		DaemonSets:        make(Set),
+		Deployments:       make(Set),
+		Namespaces:        make(Set),
+		Nodes:             make(Set),
+		Pods:              make(Set),
+		Running:           make(Set),
+		StatefulSets:      make(Set),
+		ContainerRuntimes: make(Counter),
+		InstanceTypes:     make(Counter),
+		KernelVersions:    make(Counter),
+		KubeletVersions:   make(Counter),
+		OSImages:          make(Counter),
+		ProxyVersions:     make(Counter),
+		Zones:             make(Counter),
 	}
 }
 
 // Index provides indexes for a number of the cluster entities.
 type Index struct {
-	Containers   Set
-	DaemonSets   Set
-	Deployments  Set
-	Namespaces   Set
-	Nodes        Set
-	Pods         Set
-	Running      Set
-	StatefulSets Set
+	CNIPlugins        Counter
+	Containers        Set
+	DaemonSets        Set
+	Deployments       Set
+	Namespaces        Set
+	Nodes             Set
+	Pods              Set
+	Running           Set
+	StatefulSets      Set
+	ContainerRuntimes Counter
+	InstanceTypes     Counter
+	KernelVersions    Counter
+	KubeletVersions   Counter
+	OSImages          Counter
+	ProxyVersions     Counter
+	Zones             Counter
 }
 
 // Summary provides a summary overview of the number of entities in the cluster.
@@ -43,7 +60,7 @@ type Summary struct {
 	StatefulSets int
 }
 
-// Summary provides a summary count for all of the entities.
+// Summary provides a summary pods for all the entities.
 func (index *Index) Summary() Summary {
 	return Summary{
 		Containers:   index.Containers.Len(),
@@ -66,8 +83,18 @@ const (
 	StatefulSet = "StatefulSet"
 )
 
-// Each extracts the relevant pod details and integrates it into the index.
-func (index *Index) Each(pod PodInfo) {
+func (index *Index) EachNode(node NodeInfo) {
+	index.ContainerRuntimes.Add(node.ContainerRuntime)
+	index.InstanceTypes.Add(node.InstanceType)
+	index.KernelVersions.Add(node.KernelVersion)
+	index.KubeletVersions.Add(node.KubeletVersion)
+	index.OSImages.Add(node.OSImage)
+	index.ProxyVersions.Add(node.ProxyVersion)
+	index.Zones.Add(node.Zone)
+}
+
+// EachPod extracts the relevant pod details and integrates it into the index.
+func (index *Index) EachPod(pod PodInfo) {
 	qualifiedName := fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)
 	index.Pods.Add(qualifiedName)
 	if pod.IsRunning {
@@ -89,6 +116,9 @@ func (index *Index) Each(pod PodInfo) {
 	for n, t := range pod.Owners {
 		switch t {
 		case DaemonSet:
+			if IsCNIPlugin(n) {
+				index.CNIPlugins.Add(n)
+			}
 			index.DaemonSets.Add(n)
 			break
 		case ReplicaSet: // hackish way to calculate deployments
@@ -98,6 +128,37 @@ func (index *Index) Each(pod PodInfo) {
 			index.StatefulSets.Add(n)
 		}
 	}
+}
+
+func IsCNIPlugin(n string) bool {
+	if n == "aws-node" {
+		return true
+	}
+	if strings.HasPrefix(n, "cilium") {
+		return true
+	}
+	if strings.HasPrefix(n, "calico") {
+		return true
+	}
+	if strings.HasPrefix(n, "flannel") {
+		return true
+	}
+	if strings.HasPrefix(n, "kube-router") {
+		return true
+	}
+	return false
+}
+
+type Counter map[string]int
+
+func (c Counter) Add(item string) {
+	i := c[item]
+	i++
+	c[item] = i
+}
+
+func (c Counter) Len() int {
+	return len(c)
 }
 
 // Set provides a set collection for strings.

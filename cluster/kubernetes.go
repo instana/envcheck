@@ -44,6 +44,7 @@ func New(kubeconfig string) (*KubernetesQuery, error) {
 type Query interface {
 	// AllPods returns the list of pods from the related cluster.
 	AllPods() ([]PodInfo, error)
+	AllNodes() ([]NodeInfo, error)
 	Host() string
 	Time() time.Time
 	InstanaLeader() (string, error)
@@ -97,6 +98,58 @@ type LeaderLease struct {
 	// {"holderIdentity":"instana-agent-hcdhs","leaseDurationSeconds":10,"acquireTime":"2020-06-03T19:54:57Z","renewTime":"2020-06-03T20:04:12Z","leaderTransitions":0}`
 }
 
+type NodeInfo struct {
+	ContainerRuntime string
+	InstanceType     string
+	KernelVersion    string
+	KubeletVersion   string
+	Name             string
+	OSImage          string
+	ProxyVersion     string
+	Zone             string
+}
+
+const limit = 250
+const pauseTime = 50
+
+func (q *KubernetesQuery) AllNodes() ([]NodeInfo, error) {
+	var cont string
+	var nodeList []NodeInfo
+
+	for true {
+		nodes, err := q.core.Nodes().List(context.TODO(), metav1.ListOptions{Limit: limit, Continue: cont})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, node := range nodes.Items {
+			nodeInfo := node.Status.NodeInfo
+			labels := node.Labels
+
+			info := NodeInfo{
+				Name:             node.Name,
+				ContainerRuntime: nodeInfo.ContainerRuntimeVersion,
+				InstanceType:     labels["node.kubernetes.io/instance-type"],
+				KernelVersion:    nodeInfo.KernelVersion,
+				KubeletVersion:   nodeInfo.KubeletVersion,
+				OSImage:          nodeInfo.OSImage,
+				ProxyVersion:     nodeInfo.KubeProxyVersion,
+				Zone:             labels["topology.kubernetes.io/zone"],
+			}
+			nodeList = append(nodeList, info)
+
+		}
+
+		cont = nodes.Continue
+		if cont == "" {
+			break
+		}
+		time.Sleep(pauseTime * time.Millisecond)
+	}
+
+	return nodeList, nil
+}
+
 // AllPods retrieves all pod info from the cluster.
 func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 	var cont string
@@ -104,7 +157,7 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 	namespaces := make(map[string]bool)
 
 	for true {
-		pods, err := q.core.Pods("").List(context.TODO(), metav1.ListOptions{Limit: 100, Continue: cont})
+		pods, err := q.core.Pods("").List(context.TODO(), metav1.ListOptions{Limit: limit, Continue: cont})
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +190,7 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 		if cont == "" {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(pauseTime * time.Millisecond)
 	}
 
 	return podList, nil
@@ -182,19 +235,19 @@ func (q *KubernetesQuery) AgentInfo(namespace string, name string) (*AgentInfo, 
 	for _, v := range list.Items {
 		var event = AgentEvent{
 			EventTime: v.EventTime.Time,
-			Reason: v.Reason,
-			Message: v.Message,
+			Reason:    v.Reason,
+			Message:   v.Message,
 		}
 		events = append(events, event)
 	}
 
 	info := &AgentInfo{
-		Available: ds.Status.NumberAvailable,
-		Desired: ds.Status.DesiredNumberScheduled,
-		EventList: events,
+		Available:    ds.Status.NumberAvailable,
+		Desired:      ds.Status.DesiredNumberScheduled,
+		EventList:    events,
 		Misscheduled: ds.Status.NumberMisscheduled,
-		Ready: ds.Status.NumberReady,
-		Unavailable: ds.Status.NumberUnavailable,
+		Ready:        ds.Status.NumberReady,
+		Unavailable:  ds.Status.NumberUnavailable,
 	}
 	return info, nil
 }
