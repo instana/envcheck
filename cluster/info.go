@@ -45,6 +45,7 @@ type PodInfo struct {
 	Name       string
 	Namespace  string
 	Owners     map[string]string
+	Restarts   int
 }
 
 // ContainerInfo is summary details for a container.

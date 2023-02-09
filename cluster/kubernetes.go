@@ -182,6 +182,9 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 					Name:  container.Name,
 				})
 			}
+			for _, status := range pod.Status.ContainerStatuses {
+				info.Restarts += int(status.RestartCount)
+			}
 			info.Containers = containers
 			podList = append(podList, info)
 		}

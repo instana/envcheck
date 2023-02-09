@@ -18,6 +18,7 @@ func NewIndex() *Index {
 		Pods:              make(Set),
 		Running:           make(Set),
 		StatefulSets:      make(Set),
+		AgentRestarts:     make(Counter),
 		ContainerRuntimes: make(Counter),
 		InstanceTypes:     make(Counter),
 		KernelVersions:    make(Counter),
@@ -30,7 +31,6 @@ func NewIndex() *Index {
 
 // Index provides indexes for a number of the cluster entities.
 type Index struct {
-	CNIPlugins        Counter
 	Containers        Set
 	DaemonSets        Set
 	Deployments       Set
@@ -39,6 +39,8 @@ type Index struct {
 	Pods              Set
 	Running           Set
 	StatefulSets      Set
+	AgentRestarts     Counter
+	CNIPlugins        Counter
 	ContainerRuntimes Counter
 	InstanceTypes     Counter
 	KernelVersions    Counter
@@ -119,15 +121,27 @@ func (index *Index) EachPod(pod PodInfo) {
 			if IsCNIPlugin(n) {
 				index.CNIPlugins.Add(n)
 			}
+			if IsInstanaAgent(pod) {
+				index.AgentRestarts.Set(pod.Name, pod.Restarts)
+			}
 			index.DaemonSets.Add(n)
-			break
+
 		case ReplicaSet: // hackish way to calculate deployments
 			index.Deployments.Add(n)
-			break
+
 		case StatefulSet:
 			index.StatefulSets.Add(n)
 		}
 	}
+}
+
+func IsInstanaAgent(pod PodInfo) bool {
+	for _, c := range pod.Containers {
+		if c.Name == "instana-agent" {
+			return true
+		}
+	}
+	return false
 }
 
 func IsCNIPlugin(n string) bool {
@@ -155,6 +169,10 @@ func (c Counter) Add(item string) {
 	i := c[item]
 	i++
 	c[item] = i
+}
+
+func (c Counter) Set(item string, value int) {
+	c[item] = value
 }
 
 func (c Counter) Len() int {

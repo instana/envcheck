@@ -76,7 +76,9 @@ func Test_AllNodes(t *testing.T) {
 	}
 
 	expected := cluster.NodeInfo{
-		Name: "ip-10-255-223-76.us-west-2.compute.internal",
+		Name:         "ip-10-255-223-76.us-west-2.compute.internal",
+		InstanceType: "r5.2xlarge",
+		Zone:         "us-west-2b",
 	}
 
 	if !cmp.Equal(&expected, &all[0]) {

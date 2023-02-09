@@ -58,7 +58,7 @@ func ExecInspect(config EnvcheckConfig) {
 	info.Apply(index)
 	summary := index.Summary()
 
-	log.Printf("pods=%d, running=%d, nodes=%d, containers=%d, namespaces=%d, deployments=%d, replicaSets=%d, daemonsets=%d, statefulsets=%d, duration=%v\n",
+	log.Printf("pods=%d, running=%d, nodes=%d, containers=%d, namespaces=%d, deployments=%d, replicaSets=%d, daemonsets=%d, statefulsets=%d, duration=%v\n\n",
 		summary.Pods,
 		summary.Running,
 		summary.Nodes,
@@ -70,6 +70,7 @@ func ExecInspect(config EnvcheckConfig) {
 		summary.StatefulSets,
 		info.Finished.Sub(info.Started))
 
+	PrintTop(10, "agentRestarts:", index.AgentRestarts)
 	PrintCounter("cniPlugins:", index.CNIPlugins)
 	PrintCounter("containerRuntimes:", index.ContainerRuntimes)
 	PrintCounter("instanceTypes:", index.InstanceTypes)
@@ -80,12 +81,31 @@ func ExecInspect(config EnvcheckConfig) {
 	PrintCounter("zones:", index.Zones)
 
 	size := agent.Size(summary)
-	log.Printf("sizing=instana-agent cpurequests=%s cpulimits=%s memoryrequests=%s memorylimits=%s heap=%s\n",
+	log.Printf("\nsizing=instana-agent cpurequests=%s cpulimits=%s memoryrequests=%s memorylimits=%s heap=%s\n",
 		size.CPURequest,
 		size.CPULimit,
 		size.MemoryRequest,
 		size.MemoryLimit,
 		size.Heap)
+}
+
+type top struct {
+	name  string
+	value int
+}
+
+func PrintTop(n int, header string, c cluster.Counter) {
+	var li []top
+	for k, v := range c {
+		li = append(li, top{k, v})
+	}
+	sort.Slice(li, func(i, j int) bool {
+		return li[i].value > li[j].value
+	})
+	log.Println(header)
+	for _, v := range li[:n] {
+		log.Printf("- \"%v\"=%d", v.name, v.value)
+	}
 }
 
 func PrintCounter(header string, c cluster.Counter) {
