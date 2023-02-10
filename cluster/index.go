@@ -19,6 +19,8 @@ func NewIndex() *Index {
 		Running:           make(Set),
 		StatefulSets:      make(Set),
 		AgentRestarts:     make(Counter),
+		AgentStatus:       make(Counter),
+		ChartVersions:     make(Counter),
 		ContainerRuntimes: make(Counter),
 		InstanceTypes:     make(Counter),
 		KernelVersions:    make(Counter),
@@ -40,6 +42,8 @@ type Index struct {
 	Running           Set
 	StatefulSets      Set
 	AgentRestarts     Counter
+	AgentStatus       Counter
+	ChartVersions     Counter
 	CNIPlugins        Counter
 	ContainerRuntimes Counter
 	InstanceTypes     Counter
@@ -123,6 +127,8 @@ func (index *Index) EachPod(pod PodInfo) {
 			}
 			if IsInstanaAgent(pod) {
 				index.AgentRestarts.Set(pod.Name, pod.Restarts)
+				index.AgentStatus.Add(pod.Status)
+				index.ChartVersions.Add(pod.ChartVersion)
 			}
 			index.DaemonSets.Add(n)
 

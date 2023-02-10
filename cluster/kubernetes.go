@@ -164,11 +164,13 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 
 		for _, pod := range pods.Items {
 			info := PodInfo{
-				IsRunning: pod.Status.Phase == v1.PodRunning,
-				Name:      pod.Name,
-				Namespace: pod.Namespace,
-				Host:      pod.Status.HostIP,
-				Owners:    make(map[string]string),
+				ChartVersion: pod.Labels["app.kubernetes.io/version"],
+				Host:         pod.Status.HostIP,
+				IsRunning:    pod.Status.Phase == v1.PodRunning,
+				Name:         pod.Name,
+				Namespace:    pod.Namespace,
+				Owners:       make(map[string]string),
+				Status:       string(pod.Status.Phase),
 			}
 			for _, owner := range pod.OwnerReferences {
 				info.Owners[owner.Name] = owner.Kind

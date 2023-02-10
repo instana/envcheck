@@ -69,8 +69,10 @@ func ExecInspect(config EnvcheckConfig) {
 		summary.DaemonSets,
 		summary.StatefulSets,
 		info.Finished.Sub(info.Started))
-
+	log.Printf("coverage=\"%d of %d (%0.2f%%)\"\n\n", index.AgentRestarts.Len(), index.Nodes.Len(), float64(index.AgentRestarts.Len())/float64(index.Nodes.Len())*100.0)
 	PrintTop(10, "agentRestarts:", index.AgentRestarts)
+	PrintCounter("agentStatus:", index.AgentStatus)
+	PrintCounter("chartVersions:", index.ChartVersions)
 	PrintCounter("cniPlugins:", index.CNIPlugins)
 	PrintCounter("containerRuntimes:", index.ContainerRuntimes)
 	PrintCounter("instanceTypes:", index.InstanceTypes)
