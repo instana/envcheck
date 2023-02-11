@@ -25,6 +25,7 @@ func NewIndex() *Index {
 		InstanceTypes:     make(Counter),
 		KernelVersions:    make(Counter),
 		KubeletVersions:   make(Counter),
+		LinkedConfigMaps:  make(Counter),
 		OSImages:          make(Counter),
 		ProxyVersions:     make(Counter),
 		Zones:             make(Counter),
@@ -49,6 +50,7 @@ type Index struct {
 	InstanceTypes     Counter
 	KernelVersions    Counter
 	KubeletVersions   Counter
+	LinkedConfigMaps  Counter
 	OSImages          Counter
 	ProxyVersions     Counter
 	Zones             Counter
@@ -129,6 +131,9 @@ func (index *Index) EachPod(pod PodInfo) {
 				index.AgentRestarts.Set(pod.Name, pod.Restarts)
 				index.AgentStatus.Add(pod.Status)
 				index.ChartVersions.Add(pod.ChartVersion)
+				for _, cm := range pod.LinkedConfigMaps {
+					index.LinkedConfigMaps.Add(fmt.Sprintf("%s/%s", cm.Namespace, cm.Name))
+				}
 			}
 			index.DaemonSets.Add(n)
 

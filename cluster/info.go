@@ -39,15 +39,16 @@ func (info *Info) Apply(applyable ...Applyable) {
 
 // PodInfo is summary details for a pod.
 type PodInfo struct {
-	ChartVersion string
-	Containers   []ContainerInfo
-	Host         string
-	IsRunning    bool
-	Name         string
-	Namespace    string
-	Owners       map[string]string
-	Restarts     int
-	Status       string
+	ChartVersion     string
+	Containers       []ContainerInfo
+	LinkedConfigMaps []LinkedConfigMap
+	Host             string
+	IsRunning        bool
+	Name             string
+	Namespace        string
+	Owners           map[string]string
+	Restarts         int
+	Status           string
 }
 
 // ContainerInfo is summary details for a container.

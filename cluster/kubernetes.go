@@ -150,6 +150,11 @@ func (q *KubernetesQuery) AllNodes() ([]NodeInfo, error) {
 	return nodeList, nil
 }
 
+type LinkedConfigMap struct {
+	Name      string
+	Namespace string
+}
+
 // AllPods retrieves all pod info from the cluster.
 func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 	var cont string
@@ -177,6 +182,16 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 			}
 			namespaces[pod.Namespace] = true
 
+			var linkedConfigMaps []LinkedConfigMap
+			for _, vol := range pod.Spec.Volumes {
+				if vol.ConfigMap != nil {
+					linkedConfigMaps = append(linkedConfigMaps, LinkedConfigMap{
+						Name:      vol.ConfigMap.Name,
+						Namespace: pod.Namespace,
+					})
+				}
+			}
+
 			var containers []ContainerInfo
 			for _, container := range pod.Spec.Containers {
 				containers = append(containers, ContainerInfo{
@@ -188,6 +203,7 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 				info.Restarts += int(status.RestartCount)
 			}
 			info.Containers = containers
+			info.LinkedConfigMaps = linkedConfigMaps
 			podList = append(podList, info)
 		}
 

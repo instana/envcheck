@@ -114,6 +114,7 @@ func Test_AllPods(t *testing.T) {
 		Host:       "192.168.0.1",
 		Owners:     map[string]string{"uid": "DaemonSet"},
 		Containers: []cluster.ContainerInfo{{Name: "instana-agent", Image: "instana-agent:latest"}},
+		Status:     "Running",
 	}
 	if !cmp.Equal(&expected, &all[0]) {
 		t.Errorf("AllPods()[0] mismatch (-want +got):\n%s", cmp.Diff(&expected, &all[0]))
