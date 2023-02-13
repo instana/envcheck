@@ -68,6 +68,10 @@ func (q *stubQuery) Host() string {
 	return "https://localhost:8443"
 }
 
+func (q *stubQuery) AllNodes() ([]cluster.NodeInfo, error) {
+	return []cluster.NodeInfo{}, nil
+}
+
 func (q *stubQuery) AllPods() ([]cluster.PodInfo, error) {
 	pods := []cluster.PodInfo{
 		{

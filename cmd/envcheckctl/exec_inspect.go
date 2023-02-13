@@ -6,14 +6,16 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/instana/envcheck/agent"
 	"github.com/instana/envcheck/cluster"
 )
 
-// ExecInspect executes the inspect subcommand.
+// ExecInspect executes the subcommand inspect.
 func ExecInspect(config EnvcheckConfig) {
+	log.SetFlags(0)
 	var info *cluster.Info
 	if config.IsLive() {
 		query, err := cluster.New(config.Kubeconfig)
@@ -56,24 +58,71 @@ func ExecInspect(config EnvcheckConfig) {
 	info.Apply(index)
 	summary := index.Summary()
 
-	log.Printf("pods=%d, running=%d, nodes=%d, containers=%d, namespaces=%d, deployments=%d, daemonsets=%d, statefulsets=%d, duration=%v\n",
+	log.Printf("pods=%d, running=%d, nodes=%d, containers=%d, namespaces=%d, deployments=%d, replicaSets=%d, daemonsets=%d, statefulsets=%d, duration=%v\n\n",
 		summary.Pods,
 		summary.Running,
 		summary.Nodes,
 		summary.Containers,
 		summary.Namespaces,
 		summary.Deployments,
+		summary.Deployments,
 		summary.DaemonSets,
 		summary.StatefulSets,
 		info.Finished.Sub(info.Started))
+	log.Printf("coverage=\"%d of %d (%0.2f%%)\"\n\n", index.AgentRestarts.Len(), index.Nodes.Len(), float64(index.AgentRestarts.Len())/float64(index.Nodes.Len())*100.0)
+
+	PrintTop(10, "agentRestarts", index.AgentRestarts)
+	PrintCounter("agentStatus", index.AgentStatus)
+	PrintCounter("chartVersions", index.ChartVersions)
+	PrintCounter("cniPlugins", index.CNIPlugins)
+	PrintCounter("containerRuntimes", index.ContainerRuntimes)
+	PrintCounter("instanceTypes", index.InstanceTypes)
+	PrintCounter("kernels", index.KernelVersions)
+	PrintCounter("kubelet", index.KubeletVersions)
+	PrintCounter("osImages", index.OSImages)
+	PrintCounter("proxy", index.ProxyVersions)
+	PrintCounter("zones", index.Zones)
+	PrintCounter("linkedConfigMaps", index.LinkedConfigMaps)
 
 	size := agent.Size(summary)
-	log.Printf("sizing=instana-agent cpurequests=%s cpulimits=%s memoryrequests=%s memorylimits=%s heap=%s\n",
+	log.Printf("\nsizing=instana-agent cpurequests=%s cpulimits=%s memoryrequests=%s memorylimits=%s heap=%s\n",
 		size.CPURequest,
 		size.CPULimit,
 		size.MemoryRequest,
 		size.MemoryLimit,
 		size.Heap)
+}
+
+type top struct {
+	name  string
+	value int
+}
+
+func PrintTop(n int, header string, c cluster.Counter) {
+	var li []top
+	for k, v := range c {
+		li = append(li, top{k, v})
+	}
+	sort.Slice(li, func(i, j int) bool {
+		return li[i].value > li[j].value
+	})
+	log.Println(header)
+	for _, v := range li[:n] {
+		log.Printf("- \"%v\"=%d", v.name, v.value)
+	}
+}
+
+func PrintCounter(header string, c cluster.Counter) {
+	log.Println("")
+	var keys []string
+	for k := range c {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	log.Println(header)
+	for _, k := range keys {
+		log.Printf("- \"%v\"=%d", k, c[k])
+	}
 }
 
 // QueryLive queries a cluster and builds the cluster info from the current data.
@@ -84,7 +133,7 @@ func QueryLive(query cluster.Query) (*cluster.Info, error) {
 	}
 
 	log.Printf("envcheckctl=%s, cluster=%v, start=%v\n", Revision, info.Name, info.Started.Format(time.RFC3339))
-	log.Println("Collecting pod details. Duration varies depending on the cluster.")
+	log.Println("Collecting cluster details. Duration varies depending on the cluster.")
 	pods, err := query.AllPods()
 	if err != nil {
 		return nil, err
@@ -92,6 +141,13 @@ func QueryLive(query cluster.Query) (*cluster.Info, error) {
 	info.Finished = query.Time()
 	info.Pods = pods
 	info.PodCount = len(pods)
+
+	nodes, err := query.AllNodes()
+	if err != nil {
+		return nil, err
+	}
+	info.Nodes = nodes
+	info.NodeCount = len(nodes)
 
 	return info, nil
 }

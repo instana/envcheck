@@ -60,6 +60,32 @@ func Test_InstanaLeader_should_error_when_no_endpoint(t *testing.T) {
 	}
 }
 
+func Test_AllNodes(t *testing.T) {
+	t.Parallel()
+	items := []v1.Node{awsHost()}
+	client := fake.NewSimpleClientset(&v1.NodeList{Items: items})
+	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1())
+
+	all, err := query.AllNodes()
+	if err != nil {
+		t.Errorf("err=%v, want nil", err)
+	}
+
+	if len(all) != 1 {
+		t.Errorf("len(all)=%v, want 1", len(all))
+	}
+
+	expected := cluster.NodeInfo{
+		Name:         "ip-10-255-223-76.us-west-2.compute.internal",
+		InstanceType: "r5.2xlarge",
+		Zone:         "us-west-2b",
+	}
+
+	if !cmp.Equal(&expected, &all[0]) {
+		t.Errorf("AllNodes()[0] mismatch (-want +got):\n%s", cmp.Diff(&expected, &all[0]))
+	}
+}
+
 func Test_AllPods(t *testing.T) {
 	t.Parallel()
 	items := []v1.Pod{instanaAgent()}
@@ -88,6 +114,7 @@ func Test_AllPods(t *testing.T) {
 		Host:       "192.168.0.1",
 		Owners:     map[string]string{"uid": "DaemonSet"},
 		Containers: []cluster.ContainerInfo{{Name: "instana-agent", Image: "instana-agent:latest"}},
+		Status:     "Running",
 	}
 	if !cmp.Equal(&expected, &all[0]) {
 		t.Errorf("AllPods()[0] mismatch (-want +got):\n%s", cmp.Diff(&expected, &all[0]))
@@ -124,4 +151,34 @@ func instanaAgent() v1.Pod {
 	instanaAgent.Status.Phase = v1.PodRunning
 	instanaAgent.Spec.Containers = append(instanaAgent.Spec.Containers, container)
 	return instanaAgent
+}
+
+func awsHost() v1.Node {
+	var node v1.Node
+	node.Name = "ip-10-255-223-76.us-west-2.compute.internal"
+	node.Labels = map[string]string{
+		"alpha.eksctl.io/cluster-name":             "k8s-infra-us-west-2",
+		"alpha.eksctl.io/nodegroup-name":           "k8s-infra-us-west-2-private-beeinstant-aggregator-2",
+		"beta.kubernetes.io/arch":                  "amd64",
+		"beta.kubernetes.io/instance-type":         "r5.2xlarge",
+		"beta.kubernetes.io/os":                    "linux",
+		"eks.amazonaws.com/capacityType":           "ON_DEMAND",
+		"eks.amazonaws.com/nodegroup":              "k8s-infra-us-west-2-private-beeinstant-aggregator-2",
+		"eks.amazonaws.com/nodegroup-image":        "ami-083ae3afdae9db445",
+		"failure-domain.beta.kubernetes.io/region": "us-west-2",
+		"failure-domain.beta.kubernetes.io/zone":   "us-west-2b",
+		"instanaGroup":                             "beeinstant-aggregator",
+		"k8s.io/cloud-provider-aws":                "ee35cab3121e7a6e8e1422f6229646a3",
+		"kubernetes.io/arch":                       "amd64",
+		"kubernetes.io/hostname":                   "ip-10-255-223-76.instana.io",
+		"kubernetes.io/os":                         "linux",
+		"node.kubernetes.io/instance-type":         "r5.2xlarge",
+		"topology.kubernetes.io/region":            "us-west-2",
+		"topology.kubernetes.io/zone":              "us-west-2b",
+	}
+	node.Annotations = map[string]string{
+		"node.alpha.kubernetes.io/ttl":                           "0",
+		"volumes.kubernetes.io/controller-managed-attach-detach": "true",
+	}
+	return node
 }

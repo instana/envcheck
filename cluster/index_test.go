@@ -44,8 +44,8 @@ func Test_Each_increments_unique_namespaces(t *testing.T) {
 	ns2 := cluster.PodInfo{Host: "nod01", Namespace: "two", Owners: owner(cluster.ReplicaSet)}
 
 	index := cluster.NewIndex()
-	index.Each(ns1)
-	index.Each(ns2)
+	index.EachPod(ns1)
+	index.EachPod(ns2)
 
 	actual := index.Summary()
 	expected := cluster.Summary{
@@ -64,8 +64,8 @@ func Test_Each_container_increments_containers(t *testing.T) {
 	container2 := cluster.PodInfo{Host: "two", Name: "pod-2", Containers: []cluster.ContainerInfo{container("instana"), container("leader")}, Owners: owner(cluster.ReplicaSet)}
 
 	index := cluster.NewIndex()
-	index.Each(container1)
-	index.Each(container2)
+	index.EachPod(container1)
+	index.EachPod(container2)
 	actual := index.Summary()
 	expected := cluster.Summary{
 		Containers: 3, Deployments: 1, Namespaces: 1, Nodes: 2, Pods: 2,
@@ -89,9 +89,9 @@ func Test_Each_increments_unique_hosts(t *testing.T) {
 	unscheduled := cluster.PodInfo{Host: "", Name: "pod-2", Owners: owner(cluster.ReplicaSet)}
 
 	index := cluster.NewIndex()
-	index.Each(host1)
-	index.Each(host2)
-	index.Each(unscheduled)
+	index.EachPod(host1)
+	index.EachPod(host2)
+	index.EachPod(unscheduled)
 
 	actual := index.Summary()
 	expected := cluster.Summary{
@@ -118,7 +118,7 @@ func Test_Each_increments_by_owner_type(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			index := cluster.NewIndex()
-			index.Each(tc.pod)
+			index.EachPod(tc.pod)
 			actual := index.Summary()
 			if !cmp.Equal(&actual, &tc.summary) {
 				t.Errorf("Summary() mismatch (-want +got)\n%s", cmp.Diff(tc.summary, actual))
