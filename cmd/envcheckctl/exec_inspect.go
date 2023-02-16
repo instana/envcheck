@@ -107,6 +107,9 @@ func PrintTop(n int, header string, c cluster.Counter) {
 		return li[i].value > li[j].value
 	})
 	log.Println(header)
+	if n > len(li) {
+		n = len(li)
+	}
 	for _, v := range li[:n] {
 		log.Printf("- \"%v\"=%d", v.name, v.value)
 	}
