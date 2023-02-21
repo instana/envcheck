@@ -91,7 +91,6 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 	flags.BoolVar(&config.UseGateway, "use-gateway", false, "use the pods gateway as the host to ping")
 
 	flags, config = cmdFlags.FlagSet("inspect", InspectCluster)
-	flags.StringVar(&config.AgentNamespace, "agentns", "instana-agent", "Instana agent namespace")
 	flags.StringVar(&config.Podfile, "podfile", "", "read from podfile instead of live cluster query")
 	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
 
