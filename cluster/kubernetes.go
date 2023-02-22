@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/version"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -37,7 +38,7 @@ func New(kubeconfig string) (*KubernetesQuery, error) {
 		return nil, err
 	}
 
-	return NewQuery(config.Host, clientset.CoreV1(), clientset.AppsV1()), nil
+	return NewQuery(config.Host, clientset.CoreV1(), clientset.AppsV1(), clientset.ServerVersion), nil
 }
 
 // Query is a query interface for the cluster.
@@ -46,20 +47,22 @@ type Query interface {
 	AllPods() ([]PodInfo, error)
 	AllNodes() ([]NodeInfo, error)
 	Host() string
-	Time() time.Time
 	InstanaLeader() (string, error)
+	ServerVersion() (string, error)
+	Time() time.Time
 }
 
 // NewQuery allocates and returns a new Query.
-func NewQuery(h string, cs typev1.CoreV1Interface, apps appv1.AppsV1Interface) *KubernetesQuery {
-	return &KubernetesQuery{h, cs, apps}
+func NewQuery(h string, cs typev1.CoreV1Interface, apps appv1.AppsV1Interface, version func() (*version.Info, error)) *KubernetesQuery {
+	return &KubernetesQuery{h, cs, apps, version}
 }
 
 // KubernetesQuery is a concrete Kubernetes client to query various cluster info.
 type KubernetesQuery struct {
-	host string
-	core typev1.CoreV1Interface
-	apps appv1.AppsV1Interface
+	host    string
+	core    typev1.CoreV1Interface
+	apps    appv1.AppsV1Interface
+	version func() (*version.Info, error)
 }
 
 // Time returns the current time.
@@ -70,6 +73,14 @@ func (q *KubernetesQuery) Time() time.Time {
 // Host provides the host info for the cluster.
 func (q *KubernetesQuery) Host() string {
 	return q.host
+}
+
+func (q *KubernetesQuery) ServerVersion() (string, error) {
+	info, err := q.version()
+	if err != nil {
+		return "", err
+	}
+	return info.GitVersion, nil
 }
 
 // InstanaLeader returns the instana agent leader pod name.
