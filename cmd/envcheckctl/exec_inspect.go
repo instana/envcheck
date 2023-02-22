@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/instana/envcheck/agent"
@@ -71,6 +72,7 @@ func ExecInspect(config EnvcheckConfig) {
 		info.Finished.Sub(info.Started))
 	log.Printf("coverage=\"%d of %d (%0.2f%%)\"\n\n", index.AgentRestarts.Len(), index.Nodes.Len(), float64(index.AgentRestarts.Len())/float64(index.Nodes.Len())*100.0)
 
+	PrintKind(info.ServerVersion)
 	PrintTop(10, "agentRestarts", index.AgentRestarts)
 	PrintCounter("agentStatus", index.AgentStatus)
 	PrintCounter("chartVersions", index.ChartVersions)
@@ -91,6 +93,28 @@ func ExecInspect(config EnvcheckConfig) {
 		size.MemoryRequest,
 		size.MemoryLimit,
 		size.Heap)
+}
+
+func PrintKind(version string) {
+	dist := ExtractDistribution(version)
+	log.Println("serverDistribution:")
+	log.Println(" -", dist)
+	log.Println("")
+	log.Println("serverVersion:")
+	log.Println(" -", version)
+	log.Println("")
+}
+
+func ExtractDistribution(version string) string {
+	distribution := "kubernetes"
+	if strings.Contains(version, "gke") {
+		distribution = "openshift"
+	} else if strings.Contains(version, "gke") {
+		distribution = "gke"
+	} else if strings.Contains(version, "eks") {
+		distribution = "eks"
+	}
+	return distribution
 }
 
 type top struct {
@@ -126,6 +150,9 @@ func PrintCounter(header string, c cluster.Counter) {
 	for _, k := range keys {
 		log.Printf("- \"%v\"=%d", k, c[k])
 	}
+	if len(keys) == 0 {
+		log.Println(" - \"no known resource found\"")
+	}
 }
 
 // QueryLive queries a cluster and builds the cluster info from the current data.
@@ -137,6 +164,12 @@ func QueryLive(query cluster.Query) (*cluster.Info, error) {
 
 	log.Printf("envcheckctl=%s, cluster=%v, start=%v\n", Revision, info.Name, info.Started.Format(time.RFC3339))
 	log.Println("Collecting cluster details. Duration varies depending on the cluster.")
+	versionInfo, err := query.ServerVersion()
+	if err != nil {
+		return nil, err
+	}
+	info.ServerVersion = versionInfo
+
 	pods, err := query.AllPods()
 	if err != nil {
 		return nil, err

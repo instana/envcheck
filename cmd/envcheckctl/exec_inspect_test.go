@@ -56,6 +56,10 @@ type stubQuery struct {
 	ts time.Time
 }
 
+func (q *stubQuery) ServerVersion() (string, error) {
+	return "v1.23.14-eks-ffeb93d", nil
+}
+
 func (q *stubQuery) InstanaLeader() (string, error) {
 	return "instana-agent-hcdhs", nil
 }

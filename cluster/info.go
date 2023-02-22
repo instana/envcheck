@@ -12,14 +12,15 @@ type Applyable interface {
 
 // Info is a data structure for relevant cluster data.
 type Info struct {
-	Name      string
-	NodeCount int
-	Nodes     []NodeInfo
-	PodCount  int
-	Pods      []PodInfo
-	Version   string
-	Started   time.Time
-	Finished  time.Time
+	Name          string
+	NodeCount     int
+	Nodes         []NodeInfo
+	PodCount      int
+	Pods          []PodInfo
+	ServerVersion string
+	Version       string
+	Started       time.Time
+	Finished      time.Time
 }
 
 // Apply iterates over each pod and yields it to the list of applyables.

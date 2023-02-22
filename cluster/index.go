@@ -3,7 +3,6 @@ package cluster
 import (
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 // NewIndex builds a new empty index for PodInfo.
@@ -121,6 +120,7 @@ func (index *Index) EachPod(pod PodInfo) {
 		}
 		index.Containers.Add(fmt.Sprintf("%s/%s", qualifiedName, name))
 	}
+
 	for n, t := range pod.Owners {
 		switch t {
 		case DaemonSet:
@@ -156,22 +156,17 @@ func IsInstanaAgent(pod PodInfo) bool {
 }
 
 func IsCNIPlugin(n string) bool {
-	if n == "aws-node" {
-		return true
+	m := map[string]bool{
+		"aws-node":    true,
+		"calico":      true,
+		"cilium":      true,
+		"flannel":     true,
+		"kube-router": true,
+		"multus":      true,
+		"sdn":         true,
 	}
-	if strings.HasPrefix(n, "cilium") {
-		return true
-	}
-	if strings.HasPrefix(n, "calico") {
-		return true
-	}
-	if strings.HasPrefix(n, "flannel") {
-		return true
-	}
-	if strings.HasPrefix(n, "kube-router") {
-		return true
-	}
-	return false
+
+	return m[n]
 }
 
 type Counter map[string]int

@@ -15,7 +15,7 @@ func Test_InstanaLeader_should_return_leader(t *testing.T) {
 	t.Parallel()
 	endpoints := v1.EndpointsList{Items: []v1.Endpoints{instanaEndpoint(`{"holderIdentity":"instana-agent-hcdhs"}`)}}
 	client := fake.NewSimpleClientset(&endpoints)
-	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1())
+	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1(), nil)
 	leader, err := query.InstanaLeader()
 	if err != nil {
 		t.Errorf("query.InstanaLeader() err=%#v, want nil", err)
@@ -30,7 +30,7 @@ func Test_InstanaLeader_should_return_invalid_format_if_json_invalid(t *testing.
 	t.Parallel()
 	endpoints := v1.EndpointsList{Items: []v1.Endpoints{instanaEndpoint("foobar")}}
 	client := fake.NewSimpleClientset(&endpoints)
-	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1())
+	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1(), nil)
 	_, err := query.InstanaLeader()
 	if err != cluster.ErrInvalidLeaseFormat {
 		t.Errorf("query.InstanaLeader() err=%#v, want ErrInvalidLeaseFormat", err)
@@ -41,7 +41,7 @@ func Test_InstanaLeader_should_return_leader_unknown_if_none_defined(t *testing.
 	t.Parallel()
 	endpoints := v1.EndpointsList{Items: []v1.Endpoints{instanaEndpoint("")}}
 	client := fake.NewSimpleClientset(&endpoints)
-	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1())
+	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1(), nil)
 	_, err := query.InstanaLeader()
 	if err != cluster.ErrLeaderUndefined {
 		t.Errorf("query.InstanaLeader() err=%#v, want ErrLeaderUndefined", err)
@@ -52,7 +52,7 @@ func Test_InstanaLeader_should_error_when_no_endpoint(t *testing.T) {
 	t.Parallel()
 	endpoints := v1.EndpointsList{Items: []v1.Endpoints{}}
 	client := fake.NewSimpleClientset(&endpoints)
-	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1())
+	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1(), nil)
 	_, err := query.InstanaLeader()
 	_, ok := err.(*errors.StatusError)
 	if !ok {
@@ -64,7 +64,7 @@ func Test_AllNodes(t *testing.T) {
 	t.Parallel()
 	items := []v1.Node{awsHost()}
 	client := fake.NewSimpleClientset(&v1.NodeList{Items: items})
-	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1())
+	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1(), nil)
 
 	all, err := query.AllNodes()
 	if err != nil {
@@ -92,7 +92,7 @@ func Test_AllPods(t *testing.T) {
 
 	client := fake.NewSimpleClientset(&v1.PodList{Items: items})
 
-	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1())
+	query := cluster.NewQuery("localhost:1234", client.CoreV1(), client.AppsV1(), nil)
 
 	all, err := query.AllPods()
 	if err != nil {
