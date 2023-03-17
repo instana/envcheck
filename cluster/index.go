@@ -138,7 +138,6 @@ func (index *Index) EachPod(pod PodInfo) {
 					index.LinkedConfigMaps.Add(fmt.Sprintf("%s/%s", cm.Namespace, cm.Name))
 				}
 			}
-
 			index.DaemonSets.Add(n)
 
 		case ReplicaSet: // hackish way to calculate deployments

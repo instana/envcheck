@@ -2,9 +2,11 @@ package cluster_test
 
 import (
 	"github.com/gogunit/gunit"
+
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
 	"github.com/instana/envcheck/cluster"
 )
 
