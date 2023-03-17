@@ -1,6 +1,7 @@
 package cluster_test
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -125,4 +126,18 @@ func Test_Each_increments_by_owner_type(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_Count_Pod_Status(t *testing.T) {
+	var hosts []cluster.PodInfo
+	hosts = append(hosts, cluster.PodInfo{Host: "one", Name: "pod-1", Owners: owner(cluster.DaemonSet)})
+	hosts = append(hosts, cluster.PodInfo{Host: "two", Name: "pod-2", Owners: owner(cluster.DaemonSet)})
+	hosts = append(hosts, cluster.PodInfo{Host: "three", Name: "pod-3", Owners: owner(cluster.ReplicaSet)})
+	hosts = append(hosts, cluster.PodInfo{Host: "four", Name: "pod-4", Owners: owner(cluster.DaemonSet)})
+
+	index := cluster.NewIndex()
+	for _, host := range hosts {
+		index.EachPod(host)
+	}
+	assert.Equal(t, 3, index.PodStatus[""], "Pod status count")
 }

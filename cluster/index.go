@@ -26,6 +26,7 @@ func NewIndex() *Index {
 		KubeletVersions:   make(Counter),
 		LinkedConfigMaps:  make(Counter),
 		OSImages:          make(Counter),
+		PodStatus:         make(Counter),
 		ProxyVersions:     make(Counter),
 		Zones:             make(Counter),
 	}
@@ -53,6 +54,7 @@ type Index struct {
 	OSImages          Counter
 	ProxyVersions     Counter
 	Zones             Counter
+	PodStatus         Counter
 }
 
 // Summary provides a summary overview of the number of entities in the cluster.
@@ -135,6 +137,7 @@ func (index *Index) EachPod(pod PodInfo) {
 					index.LinkedConfigMaps.Add(fmt.Sprintf("%s/%s", cm.Namespace, cm.Name))
 				}
 			}
+			index.PodStatus.Add(pod.Status)
 			index.DaemonSets.Add(n)
 
 		case ReplicaSet: // hackish way to calculate deployments
