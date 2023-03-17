@@ -82,6 +82,7 @@ func ExecInspect(config EnvcheckConfig) {
 	PrintCounter("kernels", index.KernelVersions)
 	PrintCounter("kubelet", index.KubeletVersions)
 	PrintCounter("osImages", index.OSImages)
+	PrintCounter("podStatus", index.PodStatus)
 	PrintCounter("proxy", index.ProxyVersions)
 	PrintCounter("zones", index.Zones)
 	PrintCounter("linkedConfigMaps", index.LinkedConfigMaps)
