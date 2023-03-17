@@ -3,7 +3,7 @@ module github.com/instana/envcheck
 go 1.19
 
 require (
-	github.com/google/go-cmp v0.5.5
+	github.com/google/go-cmp v0.5.9
 	github.com/jackpal/gateway v1.0.6
 	github.com/stretchr/testify v1.8.0
 	k8s.io/api v0.24.10
@@ -30,6 +30,7 @@ require (
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.14 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/gogunit/gunit v0.0.0-20230317150752-6f4e88d129c6 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/gofuzz v1.1.0 // indirect

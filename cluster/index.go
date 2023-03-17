@@ -110,6 +110,7 @@ func (index *Index) EachPod(pod PodInfo) {
 		index.Running.Add(qualifiedName)
 	}
 	index.Namespaces.Add(pod.Namespace)
+	index.PodStatus.Add(pod.Status)
 
 	if pod.Host != "" {
 		index.Nodes.Add(pod.Host)
@@ -137,7 +138,7 @@ func (index *Index) EachPod(pod PodInfo) {
 					index.LinkedConfigMaps.Add(fmt.Sprintf("%s/%s", cm.Namespace, cm.Name))
 				}
 			}
-			index.PodStatus.Add(pod.Status)
+
 			index.DaemonSets.Add(n)
 
 		case ReplicaSet: // hackish way to calculate deployments

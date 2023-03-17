@@ -1,7 +1,7 @@
 package cluster_test
 
 import (
-	"github.com/stretchr/testify/assert"
+	"github.com/gogunit/gunit"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -139,5 +139,5 @@ func Test_Count_Pod_Status(t *testing.T) {
 	for _, host := range hosts {
 		index.EachPod(host)
 	}
-	assert.Equal(t, 3, index.PodStatus[""], "Pod status count")
+	gunit.Number(t, index.PodStatus[""]).EqualTo(4)
 }
