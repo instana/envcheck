@@ -26,6 +26,7 @@ func NewIndex() *Index {
 		KubeletVersions:   make(Counter),
 		LinkedConfigMaps:  make(Counter),
 		OSImages:          make(Counter),
+		Owners:            make(Counter),
 		PodStatus:         make(Counter),
 		ProxyVersions:     make(Counter),
 		Zones:             make(Counter),
@@ -55,6 +56,7 @@ type Index struct {
 	ProxyVersions     Counter
 	Zones             Counter
 	PodStatus         Counter
+	Owners            Counter
 }
 
 // Summary provides a summary overview of the number of entities in the cluster.
@@ -146,6 +148,16 @@ func (index *Index) EachPod(pod PodInfo) {
 		case StatefulSet:
 			index.StatefulSets.Add(n)
 		}
+
+		ownerType := t
+		if ownerType == "" {
+			ownerType = "Unknown"
+		}
+		index.Owners.Add(ownerType)
+	}
+
+	if len(pod.Owners) == 0 {
+		index.Owners.Add("Standalone")
 	}
 }
 
