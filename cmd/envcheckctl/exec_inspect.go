@@ -70,7 +70,7 @@ func ExecInspect(config EnvcheckConfig) {
 		summary.DaemonSets,
 		summary.StatefulSets,
 		info.Finished.Sub(info.Started))
-	log.Printf("coverage=\"%d of %d (%0.2f%%)\"\n\n", index.AgentRestarts.Len(), index.Nodes.Len(), float64(index.AgentRestarts.Len())/float64(index.Nodes.Len())*100.0)
+	log.Printf("coverage\n- \"%d of %d (%0.2f%%)\"\n\n", index.AgentRestarts.Len(), index.Nodes.Len(), float64(index.AgentRestarts.Len())/float64(index.Nodes.Len())*100.0)
 
 	PrintKind(info.ServerVersion)
 	PrintTop(10, "agentRestarts", index.AgentRestarts)
@@ -86,6 +86,7 @@ func ExecInspect(config EnvcheckConfig) {
 	PrintCounter("proxy", index.ProxyVersions)
 	PrintCounter("zones", index.Zones)
 	PrintCounter("linkedConfigMaps", index.LinkedConfigMaps)
+	PrintCounter("owners", index.Owners)
 
 	size := agent.Size(summary)
 	log.Printf("\nsizing=instana-agent cpurequests=%s cpulimits=%s memoryrequests=%s memorylimits=%s heap=%s\n",
@@ -98,10 +99,10 @@ func ExecInspect(config EnvcheckConfig) {
 
 func PrintKind(version string) {
 	dist := ExtractDistribution(version)
-	log.Println("serverDistribution:")
+	log.Println("serverDistribution")
 	log.Println(" -", dist)
 	log.Println("")
-	log.Println("serverVersion:")
+	log.Println("serverVersion")
 	log.Println(" -", version)
 	log.Println("")
 }
