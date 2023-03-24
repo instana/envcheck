@@ -33,7 +33,7 @@ serverDistribution
 serverVersion
  - v1.23.14-eks-ffeb93d
 
-# Number of restarts that have taken place for agents
+Top 10 agents ordered by number of restarts. This is useful for diagnosing whether any agents in the cluster are experiencing frequent restarts.
 agentRestarts
 - "instana-agent-4j8zq"=5
 - "instana-agent-jt84d"=5
