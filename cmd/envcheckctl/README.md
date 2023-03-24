@@ -29,7 +29,7 @@ coverage
 serverDistribution
  - eks
 
-# distribution version
+Server version is useful for indicating API compatibility and can be used to quickly identify any release related compatibility issues such as deprecations.
 serverVersion
  - v1.23.14-eks-ffeb93d
 
