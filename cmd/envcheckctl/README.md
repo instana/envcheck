@@ -41,7 +41,7 @@ agentRestarts
 - "instana-agent-fvgbj"=2
 - "instana-agent-jvbhr"=1
 
-# Number of agents running, should match the number of pods in coverage
+Agent status indicates the current state of all Instana agents in the cluster. If any agents are not Running then it indicative of potentially anomalous infrastructure metric and trace behaviour.
 agentStatus
 - "Running"=13
 
