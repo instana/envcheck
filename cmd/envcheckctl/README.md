@@ -21,7 +21,7 @@ The application also populates standard output with the following information:
 # Summary information of all resources found
 pods=256, running=256, nodes=19, containers=338, namespaces=13, deployments=56, replicaSets=56, daemonsets=9, statefulsets=7, duration=1.435853996s
 
-Coverage indicates how many hosts in the cluster is actively monitored by Instana. Generally we expect this to be 100% however it is common to have less than 100% with OpenShift and self-managed Kubernetes clusters whereby the control-plane is not monitored due to taints. Less than 100% coverage in the absence of a taint can be an indicator for broken traces and missing infrastructure metrics.
+# Coverage indicates how many hosts in the cluster is actively monitored by Instana. Generally we expect this to be 100% however it is common to have less than 100% with OpenShift and self-managed Kubernetes clusters whereby the control-plane is not monitored due to taints. Less than 100% coverage in the absence of a taint can be an indicator for broken traces and missing infrastructure metrics.
 coverage
 - "13 of 19 (68.42%)"
 
@@ -29,11 +29,11 @@ coverage
 serverDistribution
  - eks
 
-Server version is useful for indicating API compatibility and can be used to quickly identify any release related compatibility issues such as deprecations.
+# Server version is useful for indicating API compatibility and can be used to quickly identify any release related compatibility issues such as deprecations.
 serverVersion
  - v1.23.14-eks-ffeb93d
 
-Top 10 agents ordered by number of restarts. This is useful for diagnosing whether any agents in the cluster are experiencing frequent restarts.
+# Top 10 agents ordered by number of restarts. This is useful for diagnosing whether any agents in the cluster are experiencing frequent restarts.
 agentRestarts
 - "instana-agent-4j8zq"=5
 - "instana-agent-jt84d"=5
@@ -41,7 +41,7 @@ agentRestarts
 - "instana-agent-fvgbj"=2
 - "instana-agent-jvbhr"=1
 
-Agent status indicates the current state of all Instana agents in the cluster. If any agents are not Running then it indicative of potentially anomalous infrastructure metric and trace behaviour.
+# Agent status indicates the current state of all Instana agents in the cluster. If any agents are not Running then it indicative of potentially anomalous infrastructure metric and trace behaviour.
 agentStatus
 - "Running"=13
 
