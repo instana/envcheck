@@ -21,7 +21,7 @@ The application also populates standard output with the following information:
 # Summary information of all resources found
 pods=256, running=256, nodes=19, containers=338, namespaces=13, deployments=56, replicaSets=56, daemonsets=9, statefulsets=7, duration=1.435853996s
 
-# Number of pods running against the number of nodes
+Coverage indicates how many hosts in the cluster is actively monitored by Instana. Generally we expect this to be 100% however it is common to have less than 100% with OpenShift and self-managed Kubernetes clusters whereby the control-plane is not monitored due to taints. Less than 100% coverage in the absence of a taint can be an indicator for broken traces and missing infrastructure metrics.
 coverage
 - "13 of 19 (68.42%)"
 
