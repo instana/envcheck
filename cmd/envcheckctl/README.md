@@ -45,38 +45,38 @@ agentRestarts
 agentStatus
 - "Running"=13
 
-# Lists the distribution of helm chart versions and number of pods
+# Chart versions indicates the distribution of chart versions throughout the cluster. A discrepancy in this can be indicative of an incomplete rollout and explain inconsistencies in collection across hosts.
 chartVersions
 - "1.2.45"=13
 
-# Distribution of cniPlugin
-cniPlugins
+# CNI Plugins can indicate potential factors that impact network routing and policy. In particular this can effect the routing of trace to local agents and the collection of various metrics by agent.
+  cniPlugins
 - "cilium"=19
 
-# Distribution of container Runtimes
+# Container runtimes provides insight into what container runtimes are in use in the cluster and can be used as a point of investigation relating to container metrics.
 containerRuntimes
 - "containerd://1.6.6"=19
 
-# Distribution of nodes types
+# Node types provides insight into the size of nodes used in the cluster. Particularly small nodes (e.g. 4-8GB) can be an indicator as to why the agent may not be running or has a high restart rate due to OOMKill.
 instanceTypes
 - "c5.12xlarge"=4
 - "m5.4xlarge"=9
 - "m5.large"=3
 - "m5.xlarge"=3
 
-# Distribution of kernels on nodes
+# Kernel versions can provide insights into potential known issues such as container throttling behaviour.
 kernels
 - "5.4.231-137.341.amzn2.x86_64"=19
 
-# Distribution of kubelets on nodes
+# Kubelet lets us know that the cluster is aligned and consistent in it's release.
 kubelet
 - "v1.22.17-eks-48e63af"=19
 
-# Distribution of os images on nodes
+# OS Images informs us on the OS and can indicate packages and standard security configuration.
 osImages
 - "Amazon Linux 2"=19
 
-# Distribution of pods statuses
+# Pods statuses inform us how many pods are not in a state other than running
 podStatus
 - "Running"=256
 
@@ -90,11 +90,11 @@ zones
 - "eu-central-1b"=5
 - "eu-central-1c"=8
 
-# Distribution of configmaps linked to pods
+# Configmaps linked to pods informs if pods are appropriately linked to pods 
 linkedConfigMaps
 - "instana-agent/instana-agent"=13
 
-# Distribution of pods to owner types
+# Pod owners can give insights into pods not properly linked to workflows or discrepancy of number of replicas 
 owners
 - "DaemonSet"=155
 - "ReplicaSet"=88
