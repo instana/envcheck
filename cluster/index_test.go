@@ -143,3 +143,19 @@ func Test_Count_Pod_Status(t *testing.T) {
 	}
 	gunit.Number(t, index.PodStatus[""]).EqualTo(4)
 }
+
+func Test_IsCNIPlugin(t *testing.T) {
+	td := map[string]struct {
+		expected bool
+	}{
+		"instana-agent":         {false},
+		"kube-flannel-ds-kdwch": {true},
+		"aws-node":              {true},
+	}
+
+	for n, tc := range td {
+		t.Run(n, func(t *testing.T) {
+			gunit.Struct(t, cluster.IsCNIPlugin(n)).EqualTo(tc.expected)
+		})
+	}
+}

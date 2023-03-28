@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // NewIndex builds a new empty index for PodInfo.
@@ -181,7 +182,13 @@ func IsCNIPlugin(n string) bool {
 		"sdn":         true,
 	}
 
-	return m[n]
+	for k := range m {
+		if strings.Contains(n, k) {
+			return true
+		}
+	}
+
+	return false
 }
 
 type Counter map[string]int
