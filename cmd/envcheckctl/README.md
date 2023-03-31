@@ -3,6 +3,15 @@
 The application `envcheckctl` is used to inspect a Kubernetes/OpenShift cluster for common agent
 installation issues.
 
+## Installation
+
+1. Download the latest binary for your workstation from the [release page](https://github.com/instana/envcheck/releases/tag/latest) using curl `curl -L -O ${DOWNLOAD_URL}`:
+    - Linux: envcheckctl.amd64
+    - OS X: envcheckctl.darwin64
+    - Windows: envcheckctl.exe
+2. If linux/OS X make the binary executable `chmod 700 ${PATH_TO_BINARY}`.
+3. Execute with the target subcommand: `${PATH_TO_BINARY} inspect`.
+
 ## Pull Debug Data
 
 The application `envcheckctl` is capable of collecting data directly from the cluster.
