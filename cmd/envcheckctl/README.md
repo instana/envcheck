@@ -5,7 +5,7 @@ installation issues.
 
 ## Installation
 
-1. Download the latest binary for your workstation from the [release page](https://github.com/instana/envcheck/releases/tag/latest) using curl `curl -L -O ${DOWNLOAD_URL}`:
+1. Download the latest binary for your workstation from the [release page](https://github.com/instana/envcheck/releases/latest) using curl `curl -L -O ${DOWNLOAD_URL}`:
     - Linux: envcheckctl.amd64
     - OS X: envcheckctl.darwin64
     - Windows: envcheckctl.exe
