@@ -111,8 +111,6 @@ owners
 - "Unknown"=1
 - "Standalone"=2
 
-# Resource limit information for instana-agent
-sizing=instana-agent cpurequests=500m cpulimits=1.5 memoryrequests=512Mi memorylimits=512Mi heap=170M
 ```
 
 ## Load Debug Data

@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/instana/envcheck/agent"
 	"github.com/instana/envcheck/cluster"
 )
 
@@ -87,14 +86,6 @@ func ExecInspect(config EnvcheckConfig) {
 	PrintCounter("zones", index.Zones)
 	PrintCounter("linkedConfigMaps", index.LinkedConfigMaps)
 	PrintCounter("owners", index.Owners)
-
-	size := agent.Size(summary)
-	log.Printf("\nsizing=instana-agent cpurequests=%s cpulimits=%s memoryrequests=%s memorylimits=%s heap=%s\n",
-		size.CPURequest,
-		size.CPULimit,
-		size.MemoryRequest,
-		size.MemoryLimit,
-		size.Heap)
 }
 
 func PrintKind(version string) {
