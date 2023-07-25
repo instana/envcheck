@@ -54,6 +54,15 @@ envcheck-repocheck: $(SRC)
 .PHONY: docker
 docker: docker-daemon docker-pinger docker-repocheck
 
+.PHONY: docker-promep
+docker-promep:
+	docker build . -f cmd/promep/Dockerfile -t  $(DOCKER_REPO)/promep:latest -t $(DOCKER_REPO)/promep:${GIT_SHA}
+
+.PHONY: push-promep
+push-promep: docker-promep
+	docker push $(DOCKER_REPO)/promep:${GIT_SHA}
+	docker push $(DOCKER_REPO)/promep:latest
+
 .PHONY: docker-daemon
 docker-daemon: envcheck-daemon
 	docker build . -t $(DOCKER_REPO)/envcheck-daemon:latest -t $(DOCKER_REPO)/envcheck-daemon:${GIT_SHA} --build-arg CMD_PATH=./envcheck-daemon
