@@ -6,8 +6,8 @@ metadata:
     app: promep
   annotations:
     prometheus.io/path: /metrics
-    prometheus.io/port: 8080
-    prometheus.io/scrape: true
+    prometheus.io/port: "8080"
+    prometheus.io/scrape: "true"
 spec:
   selector:
     matchLabels:
@@ -20,8 +20,6 @@ spec:
       containers:
       - name: promep
         image: nfinstana/promep
-        ports:
-        - containerPort: 8080
         resources:
           requests:
             cpu: 100m
