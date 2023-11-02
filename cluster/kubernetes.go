@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"k8s.io/apimachinery/pkg/version"
 	"time"
+
+	"k8s.io/apimachinery/pkg/version"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -179,7 +180,9 @@ func (q *KubernetesQuery) AllPods() ([]PodInfo, error) {
 		}
 
 		for _, pod := range pods.Items {
+
 			info := PodInfo{
+				Annotations:  pod.Annotations,
 				ChartVersion: pod.Labels["app.kubernetes.io/version"],
 				Host:         pod.Status.HostIP,
 				IsRunning:    pod.Status.Phase == v1.PodRunning,

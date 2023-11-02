@@ -40,6 +40,7 @@ func (info *Info) Apply(applyable ...Applyable) {
 
 // PodInfo is summary details for a pod.
 type PodInfo struct {
+	Annotations      map[string]string `json:",omitempty"`
 	ChartVersion     string
 	Containers       []ContainerInfo
 	LinkedConfigMaps []LinkedConfigMap

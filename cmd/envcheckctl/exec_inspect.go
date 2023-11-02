@@ -41,7 +41,7 @@ func ExecInspect(config EnvcheckConfig) {
 			log.Fatalln(err)
 		}
 		log.Printf("podfile=%s", filename)
-	} else if config.Podfile != "" {
+	} else {
 		r, err := os.Open(config.Podfile)
 		if err != nil {
 			log.Fatalf("open=failed file=%s err='%v'\n", config.Podfile, err)
