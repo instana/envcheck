@@ -42,6 +42,7 @@ func Exec(config EnvcheckConfig) {
 type EnvcheckConfig struct {
 	AgentNamespace  string
 	AgentName       string
+	Annotation      string
 	Kubeconfig      string
 	PingerHost      string
 	PingerNamespace string
@@ -54,6 +55,10 @@ type EnvcheckConfig struct {
 // IsLive indicates whether the inspect details should be loaded from an API or file.
 func (c *EnvcheckConfig) IsLive() bool {
 	return c.Podfile == ""
+}
+
+func (c *EnvcheckConfig) CheckAnnotation() bool {
+	return c.Annotation != ""
 }
 
 const (
@@ -93,6 +98,7 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 	flags, config = cmdFlags.FlagSet("inspect", InspectCluster)
 	flags.StringVar(&config.Podfile, "podfile", "", "read from podfile instead of live cluster query")
 	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
+	flags.StringVar(&config.Annotation, "annotation", "", "group by annotation value")
 
 	flags, config = cmdFlags.FlagSet("leader", Leader)
 	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")

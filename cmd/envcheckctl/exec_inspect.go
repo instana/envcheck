@@ -86,7 +86,58 @@ func ExecInspect(config EnvcheckConfig) {
 	PrintCounter("zones", index.Zones)
 	PrintCounter("linkedConfigMaps", index.LinkedConfigMaps)
 	PrintCounter("owners", index.Owners)
+
+	if config.CheckAnnotation() {
+		grouping := NewGrouping(config.Annotation)
+		info.Apply(grouping)
+		PrintGroup(config.Annotation, grouping)
+	}
 }
+
+func PrintGroup(header string, ag *AnnotationGrouping) {
+	log.Println("")
+	log.Println(header)
+	for k, v := range ag.group {
+		if k == "" {
+			k = "~~~ NOT PRESENT ~~~"
+		}
+		log.Println("-", k)
+		sort.Strings(v)
+		m := make(map[string]bool)
+		for _, n := range v {
+			if !m[n] {
+				log.Println("  -", n)
+			}
+			m[n] = true
+		}
+	}
+}
+
+func NewGrouping(annotation string) *AnnotationGrouping {
+	return &AnnotationGrouping{
+		annotation: annotation,
+		group:      make(map[string][]string),
+	}
+}
+
+type AnnotationGrouping struct {
+	annotation string
+	group      map[string][]string
+}
+
+func (a AnnotationGrouping) EachPod(pod cluster.PodInfo) {
+	v := pod.Annotations[a.annotation]
+	ag := a.group[v]
+	name := pod.Name
+	// use the owner name if present... if more than one present assigned oh well.
+	for owner := range pod.Owners {
+		name = owner
+	}
+	ag = append(ag, pod.Namespace+"/"+name)
+	a.group[v] = ag
+}
+
+func (a AnnotationGrouping) EachNode(_ cluster.NodeInfo) {}
 
 func PrintKind(version string) {
 	dist := ExtractDistribution(version)

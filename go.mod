@@ -1,6 +1,6 @@
 module github.com/instana/envcheck
 
-go 1.19
+go 1.21
 
 require (
 	github.com/gogunit/gunit v0.0.0-20230317150752-6f4e88d129c6
