@@ -99,16 +99,7 @@ func PrintTable(header string, ag *AnnotationTable) {
 	log.Println(header)
 	log.Println("")
 	annotations := strings.Split(header, ",")
-	rows := ag.Rows(annotations...)
-	maxWidth := make([]int, len(rows[0]), len(rows[0]))
-
-	for _, row := range rows {
-		for i, col := range row {
-			if len(col) > maxWidth[i] {
-				maxWidth[i] = len(col)
-			}
-		}
-	}
+	rows, maxWidth := ag.Rows(annotations...)
 
 	sep := "| "
 	for r, row := range rows {
@@ -145,24 +136,38 @@ type AnnotationTable struct {
 	rows       map[string]map[string]string
 }
 
-func (a *AnnotationTable) Rows(annotations ...string) [][]string {
+func (a *AnnotationTable) Rows(annotations ...string) ([][]string, []int) {
+
 	var rows [][]string
 	var header []string
 	header = append(header, "name")
 	header = append(header, annotations...)
 	rows = append(rows, header)
+	sz := len(annotations) + 1
+	maxWidth := make([]int, sz)
+	// initialize maxWidth with column header widths
+	for i, h := range header {
+		maxWidth[i] = len(h)
+	}
 
 	sort.Strings(a.names)
 	for _, n := range a.names {
+		if len(n) > maxWidth[0] {
+			maxWidth[0] = len(n)
+		}
 		var row []string
 		row = append(row, n)
 		rowAnnotations := a.rows[n]
-		for _, col := range annotations {
-			row = append(row, rowAnnotations[col])
+		for i, col := range annotations {
+			c := rowAnnotations[col]
+			if len(c) > maxWidth[i+1] {
+				maxWidth[i+1] = len(c)
+			}
+			row = append(row, c)
 		}
 		rows = append(rows, row)
 	}
-	return rows
+	return rows, maxWidth
 }
 
 func (a *AnnotationTable) Discard(ns string) bool {
