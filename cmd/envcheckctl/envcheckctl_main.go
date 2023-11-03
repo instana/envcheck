@@ -40,16 +40,17 @@ func Exec(config EnvcheckConfig) {
 
 // EnvcheckConfig is the primary configuration parameters that control this exe.
 type EnvcheckConfig struct {
-	AgentNamespace  string
-	AgentName       string
-	Annotation      string
-	Kubeconfig      string
-	PingerHost      string
-	PingerNamespace string
-	Podfile         string
-	Profile         bool
-	Subcommand      int
-	UseGateway      bool
+	AgentNamespace    string
+	AgentName         string
+	Annotation        string
+	IncludeNamespaces string
+	Kubeconfig        string
+	PingerHost        string
+	PingerNamespace   string
+	Podfile           string
+	Profile           bool
+	Subcommand        int
+	UseGateway        bool
 }
 
 // IsLive indicates whether the inspect details should be loaded from an API or file.
@@ -99,6 +100,7 @@ func Parse(args []string, kubepath string, w io.Writer) (*EnvcheckConfig, error)
 	flags.StringVar(&config.Podfile, "podfile", "", "read from podfile instead of live cluster query")
 	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")
 	flags.StringVar(&config.Annotation, "annotation", "", "group by annotation value")
+	flags.StringVar(&config.IncludeNamespaces, "include", "", "comma separated list of namespaces to include, empty list will include everything")
 
 	flags, config = cmdFlags.FlagSet("leader", Leader)
 	flags.StringVar(&config.Kubeconfig, "kubeconfig", kubepath, "absolute path to the kubeconfig file")

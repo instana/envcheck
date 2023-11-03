@@ -88,56 +88,110 @@ func ExecInspect(config EnvcheckConfig) {
 	PrintCounter("owners", index.Owners)
 
 	if config.CheckAnnotation() {
-		grouping := NewGrouping(config.Annotation)
+		grouping := NewGrouping(config.IncludeNamespaces)
 		info.Apply(grouping)
-		PrintGroup(config.Annotation, grouping)
+		PrintTable(config.Annotation, grouping)
 	}
 }
 
-func PrintGroup(header string, ag *AnnotationGrouping) {
+func PrintTable(header string, ag *AnnotationTable) {
 	log.Println("")
 	log.Println(header)
-	for k, v := range ag.group {
-		if k == "" {
-			k = "~~~ NOT PRESENT ~~~"
-		}
-		log.Println("-", k)
-		sort.Strings(v)
-		m := make(map[string]bool)
-		for _, n := range v {
-			if !m[n] {
-				log.Println("  -", n)
+	log.Println("")
+	annotations := strings.Split(header, ",")
+	rows := ag.Rows(annotations...)
+	maxWidth := make([]int, len(rows[0]), len(rows[0]))
+
+	for _, row := range rows {
+		for i, col := range row {
+			if len(col) > maxWidth[i] {
+				maxWidth[i] = len(col)
 			}
-			m[n] = true
+		}
+	}
+
+	sep := "| "
+	for r, row := range rows {
+		s := "| "
+		for i, col := range row {
+			format := fmt.Sprintf("%%-%ds | ", maxWidth[i])
+			s += fmt.Sprintf(format, col)
+			if r == 0 {
+				sep += fmt.Sprintf(format, strings.Repeat("-", maxWidth[i]))
+			}
+		}
+		log.Println(s)
+		if r == 0 {
+			log.Println(sep)
 		}
 	}
 }
 
-func NewGrouping(annotation string) *AnnotationGrouping {
-	return &AnnotationGrouping{
-		annotation: annotation,
-		group:      make(map[string][]string),
+func NewGrouping(namespaces string) *AnnotationTable {
+	li := strings.Split(namespaces, ",")
+	include := make(map[string]bool)
+	for _, ns := range li {
+		include[ns] = true
+	}
+	return &AnnotationTable{
+		rows:       make(map[string]map[string]string),
+		namespaces: include,
 	}
 }
 
-type AnnotationGrouping struct {
-	annotation string
-	group      map[string][]string
+type AnnotationTable struct {
+	namespaces map[string]bool
+	names      []string
+	rows       map[string]map[string]string
 }
 
-func (a AnnotationGrouping) EachPod(pod cluster.PodInfo) {
-	v := pod.Annotations[a.annotation]
-	ag := a.group[v]
+func (a *AnnotationTable) Rows(annotations ...string) [][]string {
+	var rows [][]string
+	var header []string
+	header = append(header, "name")
+	header = append(header, annotations...)
+	rows = append(rows, header)
+
+	sort.Strings(a.names)
+	for _, n := range a.names {
+		var row []string
+		row = append(row, n)
+		rowAnnotations := a.rows[n]
+		for _, col := range annotations {
+			row = append(row, rowAnnotations[col])
+		}
+		rows = append(rows, row)
+	}
+	return rows
+}
+
+func (a *AnnotationTable) Discard(ns string) bool {
+	if len(a.namespaces) == 0 {
+		return false
+	}
+	return !a.namespaces[ns]
+}
+
+func (a *AnnotationTable) EachPod(pod cluster.PodInfo) {
+	ns := pod.Namespace
+	if a.Discard(ns) {
+		return
+	}
 	name := pod.Name
 	// use the owner name if present... if more than one present assigned oh well.
 	for owner := range pod.Owners {
 		name = owner
 	}
-	ag = append(ag, pod.Namespace+"/"+name)
-	a.group[v] = ag
+
+	qualifiedName := ns + "/" + name
+	_, ok := a.rows[qualifiedName]
+	if !ok {
+		a.names = append(a.names, qualifiedName)
+	}
+	a.rows[qualifiedName] = pod.Annotations
 }
 
-func (a AnnotationGrouping) EachNode(_ cluster.NodeInfo) {}
+func (a *AnnotationTable) EachNode(_ cluster.NodeInfo) {}
 
 func PrintKind(version string) {
 	dist := ExtractDistribution(version)
